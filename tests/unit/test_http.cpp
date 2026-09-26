@@ -54,6 +54,15 @@ public:
 	~TinyServer()
 	{
 		fStopping = true;
+		// Haiku does not wake an accept() when another thread shuts the
+		// listening socket down; a connection of our own does.
+		int wake = ::socket(AF_INET, SOCK_STREAM, 0);
+		sockaddr_in address{};
+		address.sin_family = AF_INET;
+		address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+		address.sin_port = htons(static_cast<uint16_t>(port));
+		::connect(wake, reinterpret_cast<sockaddr*>(&address), sizeof(address));
+		::close(wake);
 		::shutdown(fListen, SHUT_RDWR);
 		::close(fListen);
 		fAccept.join();
@@ -81,6 +90,10 @@ private:
 			int client = ::accept(fListen, nullptr, nullptr);
 			if (client < 0)
 				return;
+			if (fStopping) {
+				::close(client);
+				return;
+			}
 			std::lock_guard<std::mutex> guard(fLock);
 			fWorkers.emplace_back([this, client] { serve(client); });
 		}
