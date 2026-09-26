@@ -56,4 +56,9 @@ private:
 	float fWidth = 0;
 };
 
+// Emoji as Haiku can draw them: its text engine does not shape sequences, so
+// skin tones, variation selectors and joiners would each draw as a glyph (or
+// a missing-glyph box) of their own. They are dropped.
+std::string DrawableEmoji(const std::string& text);
+
 }  // namespace natter::ui

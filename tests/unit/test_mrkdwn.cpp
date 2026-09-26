@@ -461,3 +461,68 @@ TEST(mrkdwn_store_context)
 	CHECK_EQ(store.resolveCustomEmoji("yes"), std::string("white_check_mark"));
 	CHECK_EQ(store.resolveCustomEmoji("nothing"), std::string(""));
 }
+
+
+TEST(mrkdwn_encode_typed_text)
+{
+	Store store;
+	User alice;
+	alice.id = "U01ALICE";
+	alice.name = "alice";
+	alice.displayName = "ali";
+	store.upsertUser(alice);
+	User bob;
+	bob.id = "U02BOB";
+	bob.name = "bob";
+	bob.realName = "Bob Brown";
+	store.upsertUser(bob);
+	User gone;
+	gone.id = "U09GONE";
+	gone.name = "ali2";
+	gone.deleted = true;
+	store.upsertUser(gone);
+	Channel general;
+	general.id = "C01GENERAL";
+	general.name = "general";
+	store.upsertChannel(general);
+	EncodeContext context = store.encodeContext();
+
+	CHECK_EQ(encodeMessageText("hello @ali & <friends>", context),
+		std::string("hello <@U01ALICE> &amp; &lt;friends&gt;"));
+	// Names with spaces, any case, the longest match; handles work too.
+	CHECK_EQ(encodeMessageText("@bob brown and @Bob, @alice.", context),
+		std::string("<@U02BOB> and <@U02BOB>, <@U01ALICE>."));
+	CHECK_EQ(encodeMessageText("@here @channel @everyone @nobody @ali2", context),
+		std::string("<!here> <!channel> <!everyone> @nobody @ali2"));
+	CHECK_EQ(encodeMessageText("see #general, #nowhere and C#", context),
+		std::string("see <#C01GENERAL>, #nowhere and C#"));
+	// Not in addresses, words or code.
+	CHECK_EQ(encodeMessageText("me@ali.com `@ali #general` @alix", context),
+		std::string("me@ali.com `@ali #general` @alix"));
+	CHECK_EQ(encodeMessageText("```a < b```", context), std::string("```a &lt; b```"));
+}
+
+
+TEST(mrkdwn_editable_text)
+{
+	FormatContext context = testContext();
+	CHECK_EQ(editableText("hello <@U01ALICE> &amp; friends &lt;3", context),
+		std::string("hello @ali & friends <3"));
+	CHECK_EQ(editableText("<#C01GENERAL> <#C09OTHER|random> <#C09NONE> <!here> <!subteam^S0DEVS|@devs>", context),
+		std::string("#general #random #C09NONE @here @devs"));
+	CHECK_EQ(editableText("<!date^1727000000^{date}|Sep 22> <@U09NOBODY>", context),
+		std::string("Sep 22 @U09NOBODY"));
+	CHECK_EQ(editableText("<https://example.com> <https://example.com|example.com> "
+			"<https://example.com/doc|the doc> <mailto:a@b.c|a@b.c>", context),
+		std::string("https://example.com https://example.com the doc (https://example.com/doc) a@b.c"));
+	CHECK_EQ(editableText("unterminated < and &gt;", context), std::string("unterminated < and >"));
+
+	// Round trip through the encoder.
+	Store store;
+	User alice;
+	alice.id = "U01ALICE";
+	alice.displayName = "ali";
+	store.upsertUser(alice);
+	std::string slack = "hi <@U01ALICE> &amp; all";
+	CHECK_EQ(encodeMessageText(editableText(slack, store.formatContext()), store.encodeContext()), slack);
+}

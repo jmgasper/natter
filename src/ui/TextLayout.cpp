@@ -8,6 +8,7 @@
 #include <View.h>
 
 #include <algorithm>
+#include <string_view>
 
 namespace natter::ui {
 
@@ -68,6 +69,7 @@ void TextLayout::Layout(const FormattedText& text, float width, const EmojiUrl& 
 	bool lineQuote = false;
 	bool lineCode = false;
 	int listIndent = 0;
+	bool listEnding = false;
 
 	auto finishLine = [&](bool force) {
 		if (!force && lineFirst == fFragments.size())
@@ -193,8 +195,11 @@ void TextLayout::Layout(const FormattedText& text, float width, const EmojiUrl& 
 		switch (run.kind) {
 		case RunKind::LineBreak:
 			finishLine(true);
+			// The list goes on only if the next line is another item.
+			listEnding = listIndent > 0;
 			continue;
 		case RunKind::ListMarker:
+			listEnding = false;
 			listIndent = std::max(1, run.indent + 1);
 			if (x > lineStart)
 				finishLine(false);
@@ -226,14 +231,15 @@ void TextLayout::Layout(const FormattedText& text, float width, const EmojiUrl& 
 		default:
 			break;
 		}
-		// A run outside any list at the start of a line ends the list.
-		if (run.indent == 0 && listIndent && x == lineStart && !run.text.empty()) {
+		// A line that does not start with an item ends the list.
+		if (listEnding && !run.text.empty()) {
+			listEnding = false;
 			listIndent = 0;
 			lineStart = 0;
 			x = 0;
 		}
 		// Split into words and spaces, and on newlines inside the text.
-		const std::string& value = run.text;
+		const std::string value = run.kind == RunKind::Emoji ? DrawableEmoji(run.text) : run.text;
 		size_t start = 0;
 		while (start < value.size()) {
 			if (value[start] == '\n') {
@@ -310,6 +316,26 @@ const TextLayout::Fragment* TextLayout::FragmentAt(BPoint point) const
 			return &fragment;
 	}
 	return nullptr;
+}
+
+std::string DrawableEmoji(const std::string& text)
+{
+	std::string result;
+	result.reserve(text.size());
+	for (size_t index = 0; index < text.size();) {
+		unsigned char lead = text[index];
+		size_t length = lead < 0x80 ? 1 : lead < 0xe0 ? 2 : lead < 0xf0 ? 3 : 4;
+		std::string_view character(text.data() + index, std::min(length, text.size() - index));
+		bool drop = character == "\xEF\xB8\x8F"   // U+FE0F variation selector
+			|| character == "\xE2\x80\x8D"            // U+200D zero-width joiner
+			|| (character.size() == 4 && character.substr(0, 3) == "\xF0\x9F\x8F"
+				&& static_cast<unsigned char>(character[3]) >= 0xbb
+				&& static_cast<unsigned char>(character[3]) <= 0xbf);   // U+1F3FB..U+1F3FF skin tones
+		if (!drop)
+			result.append(character);
+		index += length;
+	}
+	return result.empty() ? text : result;
 }
 
 }  // namespace natter::ui

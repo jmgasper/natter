@@ -30,6 +30,8 @@ enum : uint32 {
 	kTyping = 'ntyp',              // from the composer
 	kFilterChanged = 'nflt',
 	kSignedIn = 'nsin',            // "credentials" (JSON) from the sign-in window
+	kSignInClosed = 'nsic',
+	kBrowserSignIn = 'nsbr',       // sign in on Slack's web page instead
 	kAddWorkspace = 'nadd',
 	kOpenWorkspace = 'nopw',       // "team"
 	kSignOut = 'nsgo',

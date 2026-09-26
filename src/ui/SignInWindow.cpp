@@ -3,6 +3,7 @@
 #include "SignInWindow.h"
 
 #include "Messages.h"
+
 #include "natter/credentials.h"
 #include "natter/http.h"
 #include "natter/util.h"
@@ -24,6 +25,7 @@ namespace {
 enum : uint32 {
 	kSignIn = 'sisi',
 	kSignInResult = 'sisr',
+	kBrowser = 'sibr',
 };
 
 BTextView* Explanation(const char* text)
@@ -84,9 +86,18 @@ SignInWindow::SignInWindow()
 	fToken->TextView()->HideTyping(true);
 	fAppToken->TextView()->HideTyping(true);
 	fStatus = new BStringView("status", "");
+	fStatus->SetExplicitMaxSize(BSize(B_SIZE_UNLIMITED, B_SIZE_UNSET));
 	fSignIn = new BButton("Sign in", new BMessage(kSignIn));
+	auto* browser = new BButton("Sign in with Slack's web page…", new BMessage(kBrowser));
+#if !NATTER_WEBKIT
+	browser->Hide();
+#endif
 	BLayoutBuilder::Group<>(this, B_VERTICAL, B_USE_DEFAULT_SPACING)
 		.SetInsets(B_USE_WINDOW_INSETS)
+		.AddGroup(B_HORIZONTAL)
+			.Add(browser)
+			.AddGlue()
+		.End()
 		.Add(fTabs)
 		.AddGroup(B_HORIZONTAL)
 			.Add(fStatus)
@@ -108,7 +119,8 @@ void SignInWindow::SetBusy(bool busy, const char* status)
 
 bool SignInWindow::QuitRequested()
 {
-	BMessage closed('nsic');
+	BMessage closed(kSignInClosed);
+	closed.AddMessenger("window", BMessenger(this));
 	be_app->PostMessage(&closed);
 	return true;
 }
@@ -142,7 +154,7 @@ void SignInWindow::MessageReceived(BMessage* message)
 				if (credentials)
 					result.AddString("credentials", credentials->toJson().dump().c_str());
 				else
-					result.AddString("error", credentials.error().message.c_str());
+					result.AddString("error", credentials.error().describe().c_str());
 			} else {
 				Credentials credentials;
 				credentials.token = token;
@@ -151,12 +163,15 @@ void SignInWindow::MessageReceived(BMessage* message)
 				if (info)
 					result.AddString("credentials", credentials.toJson().dump().c_str());
 				else
-					result.AddString("error", info.error().message.c_str());
+					result.AddString("error", info.error().describe().c_str());
 			}
 			target.SendMessage(&result);
 		}).detach();
 		break;
 	}
+	case kBrowser:
+		be_app->PostMessage(kBrowserSignIn);
+		break;
 	case kSignInResult: {
 		const char* error;
 		if (message->FindString("error", &error) == B_OK) {

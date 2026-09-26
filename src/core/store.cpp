@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
@@ -528,6 +529,23 @@ Store::mergeReplies(const std::string& channel, const std::string& threadTs,
 		std::string ts = message.ts;
 		thread[ts] = std::move(message);
 	}
+	// The parent counts at least the replies we hold: its reply_count can lag
+	// behind replies that arrived in real time.
+	int replies = 0;
+	std::string latest;
+	for (const auto& [ts, reply] : thread) {
+		if (ts == threadTs || reply.hidden)
+			continue;
+		replies++;
+		latest = ts;
+	}
+	forEachCopyLocked(channel, threadTs, [&](Message& parent) {
+		if (parent.ts != threadTs || parent.replyCount >= replies)
+			return;
+		parent.replyCount = replies;
+		if (parent.latestReply.empty() || compareTs(parent.latestReply, latest) < 0)
+			parent.latestReply = latest;
+	});
 }
 
 
@@ -1115,6 +1133,43 @@ Store::formatContext() const
 	};
 	context.customEmoji = [this](const std::string& name) {
 		return resolveCustomEmoji(name);
+	};
+	return context;
+}
+
+EncodeContext
+Store::encodeContext() const
+{
+	EncodeContext context;
+	context.matchUser = [this](std::string_view text) {
+		auto lower = [](std::string_view value) {
+			std::string out(value);
+			for (char& c : out)
+				c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+			return out;
+		};
+		std::string rest = lower(text.substr(0, 128));
+		std::pair<std::string, size_t> best{ {}, 0 };
+		std::shared_lock lock(fLock);
+		for (const auto& [id, user] : fUsers) {
+			if (user.deleted)
+				continue;
+			for (const std::string* name : { &user.displayName, &user.realName, &user.name }) {
+				if (name->empty() || name->size() <= best.second || !startsWith(rest, lower(*name)))
+					continue;
+				best = { id, name->size() };
+			}
+		}
+		return best;
+	};
+	context.channelId = [this](const std::string& name) {
+		std::shared_lock lock(fLock);
+		for (const auto& [id, channel] : fChannels) {
+			if (!channel.isIm && !channel.isMpim && !channel.name.empty()
+					&& (channel.name == name || channel.nameNormalized == name))
+				return id;
+		}
+		return std::string();
 	};
 	return context;
 }

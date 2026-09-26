@@ -71,6 +71,20 @@ if(HAIKU)
 		src/ui/main.cpp
 	)
 	target_link_libraries(Natter PRIVATE natter_core be tracker translation)
+	# Signing in on Slack's own web page needs Summit's WebKit engine:
+	#   -DNATTER_WEBKIT=<engine directory with include/WebKit and libWebKit.so.1>
+	set(NATTER_WEBKIT "" CACHE PATH "Summit WebKit engine for browser sign-in")
+	if(NATTER_WEBKIT)
+		target_sources(Natter PRIVATE src/ui/BrowserSignInWindow.cpp)
+		target_compile_definitions(Natter PRIVATE NATTER_WEBKIT=1)
+		target_include_directories(Natter PRIVATE ${NATTER_WEBKIT}/include ${NATTER_WEBKIT}/source/include)
+		find_library(NATTER_WEBKIT_LIBRARY NAMES WebKit PATHS ${NATTER_WEBKIT} ${NATTER_WEBKIT}/lib NO_DEFAULT_PATH REQUIRED)
+		target_link_libraries(Natter PRIVATE ${NATTER_WEBKIT_LIBRARY})
+		set_target_properties(Natter PROPERTIES BUILD_RPATH
+			"/boot/system/lib/summit-webkit:/boot/home/config/non-packaged/lib/summit-webkit")
+	else()
+		target_compile_definitions(Natter PRIVATE NATTER_WEBKIT=0)
+	endif()
 	target_compile_options(Natter PRIVATE -Wall -Wextra -Wno-unused-parameter -Wno-multichar)
 	add_custom_command(TARGET Natter POST_BUILD
 		COMMAND rc -I ${CMAKE_CURRENT_SOURCE_DIR}/resources -o ${CMAKE_CURRENT_BINARY_DIR}/Natter.rsrc

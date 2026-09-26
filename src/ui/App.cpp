@@ -5,6 +5,11 @@
 #include "MainWindow.h"
 #include "Messages.h"
 #include "SignInWindow.h"
+#if NATTER_WEBKIT
+#include "BrowserSignInWindow.h"
+
+#include <WebKit/WebKitView.h>
+#endif
 #include "natter/credentials.h"
 
 #include <Alert.h>
@@ -56,6 +61,10 @@ void App::SaveSettings()
 
 void App::ReadyToRun()
 {
+#if NATTER_WEBKIT
+	// Summit's engine, for signing in on Slack's own page.
+	BWebKitInitialize();
+#endif
 	std::vector<std::string> teams;
 	std::error_code error;
 	for (const auto& entry : std::filesystem::directory_iterator(fDirectory + "/accounts", error)) {
@@ -130,7 +139,7 @@ void App::MessageReceived(BMessage* message)
 		std::string team = credentials.teamId.empty() ? "default" : credentials.teamId;
 		Status saved = credentials.save(fDirectory + "/accounts/" + team + ".json");
 		if (!saved) {
-			(new BAlert("Natter", ("Could not save the sign-in: " + saved.error().message).c_str(), "OK"))->Go(nullptr);
+			(new BAlert("Natter", ("Could not save the sign-in: " + saved.error().describe()).c_str(), "OK"))->Go(nullptr);
 			break;
 		}
 		fSignIn = BMessenger();
@@ -140,6 +149,18 @@ void App::MessageReceived(BMessage* message)
 	case kAddWorkspace:
 		ShowSignIn();
 		break;
+	case kBrowserSignIn: {
+#if NATTER_WEBKIT
+		// Replaces the sign-in window, which stays open until this one shows.
+		BMessenger form = fSignIn;
+		auto* window = new BrowserSignInWindow();
+		fSignIn = BMessenger(window);
+		window->Show();
+		if (form.IsValid())
+			form.SendMessage(B_QUIT_REQUESTED);
+#endif
+		break;
+	}
 	case kSignOut: {
 		std::string team = message->GetString("team", "");
 		if (team.empty())
@@ -170,12 +191,18 @@ void App::MessageReceived(BMessage* message)
 		QuitIfIdle();
 		break;
 	}
-	case 'nsic':
+	case kSignInClosed: {
+		// Only the current sign-in window counts: the form closes when the
+		// web page sign-in replaces it.
+		BMessenger window;
+		if (message->FindMessenger("window", &window) == B_OK && window != fSignIn)
+			break;
 		fSignIn = BMessenger();
 		// Closing the sign-in window with nothing else open quits.
 		if (fWindows.empty())
 			PostMessage(B_QUIT_REQUESTED);
 		break;
+	}
 	case kAbout:
 		AboutRequested();
 		break;

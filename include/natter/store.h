@@ -114,6 +114,9 @@ public:
 	// Lookups for formatMrkdwn/formatMessage bound to this store. The store
 	// must outlive the returned context.
 	FormatContext formatContext() const;
+	// Lookups for encodeMessageText, by the names people see (display
+	// name, real name or handle, in any case) and channel names.
+	EncodeContext encodeContext() const;
 
 	// ---- disk cache ----------------------------------------------------------------------------
 	// Write users, channels, emoji, team and the newest `messagesPerConversation`

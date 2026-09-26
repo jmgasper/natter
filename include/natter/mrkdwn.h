@@ -9,6 +9,7 @@
 #include <functional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "natter/models.h"
@@ -85,5 +86,26 @@ FormattedText formatRichText(const json& blocks, const FormatContext& context = 
 
 // Blocks when the message has a rich_text block, its mrkdwn text otherwise.
 FormattedText formatMessage(const Message& message, const FormatContext& context = {});
+
+// ---- text people type ---------------------------------------------------------
+
+// Lookups encodeMessageText needs; Store::encodeContext() fills them.
+struct EncodeContext {
+	// The user whose name `text` (what follows an '@') starts with: their id
+	// and the length of the name, the longest name first; {"", 0} for none.
+	std::function<std::pair<std::string, size_t>(std::string_view text)> matchUser;
+	// The id of the channel with this name ("general"), "" when unknown.
+	std::function<std::string(const std::string& name)> channelId;
+};
+
+// What a person typed -> Slack message text: '&', '<' and '>' escaped;
+// @name of a known user -> <@U..>; @here, @channel, @everyone -> <!here>..;
+// #name of a known channel -> <#C..>. Nothing changes inside `code`.
+std::string encodeMessageText(std::string_view text, const EncodeContext& context = {});
+
+// Slack message text -> the text to edit, the inverse of encodeMessageText:
+// entities decoded, mentions and channels as @name and #name, dates as their
+// fallback, links as their URL or "label (URL)".
+std::string editableText(std::string_view text, const FormatContext& context = {});
 
 }  // namespace natter

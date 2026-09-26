@@ -136,6 +136,7 @@ Sidebar::Sidebar(Session* session)
 	const Theme& theme = Theme::Current();
 	SetViewColor(theme.sidebar);
 	fTeam = new BStringView("team", "");
+	fTeam->SetExplicitMaxSize(BSize(B_SIZE_UNLIMITED, B_SIZE_UNSET));
 	BFont teamFont = theme.bold;
 	teamFont.SetSize(theme.plain.Size() * 1.2f);
 	fTeam->SetFont(&teamFont);

@@ -743,4 +743,161 @@ formatMessage(const Message& message, const FormatContext& context)
 	return formatMrkdwn(message.text, context);
 }
 
+
+namespace {
+
+bool
+isNameChar(char c)
+{
+	return std::isalnum(static_cast<unsigned char>(c)) || c == '_' || c == '-' || c == '.'
+		|| (static_cast<unsigned char>(c) & 0x80);
+}
+
+
+// Where a name may end: the end, or a character that is not part of names
+// (a trailing '.' is punctuation).
+bool
+endsName(std::string_view text, size_t at)
+{
+	if (at >= text.size())
+		return true;
+	char c = text[at];
+	if (c == '.')
+		return at + 1 >= text.size() || !isNameChar(text[at + 1]);
+	return !isNameChar(c);
+}
+
+
+bool
+startsWord(std::string_view text, size_t at)
+{
+	return at == 0 || !isNameChar(text[at - 1]);
+}
+
+}  // namespace
+
+
+std::string
+encodeMessageText(std::string_view text, const EncodeContext& context)
+{
+	std::string out;
+	out.reserve(text.size() + 16);
+	bool code = false;
+	for (size_t i = 0; i < text.size(); i++) {
+		char c = text[i];
+		if (c == '`') {
+			code = !code;
+			out += c;
+			continue;
+		}
+		if (c == '&') {
+			out += "&amp;";
+			continue;
+		}
+		if (c == '<') {
+			out += "&lt;";
+			continue;
+		}
+		if (c == '>') {
+			out += "&gt;";
+			continue;
+		}
+		if (!code && c == '@' && startsWord(text, i)) {
+			std::string_view rest = text.substr(i + 1);
+			bool special = false;
+			for (const char* name : { "here", "channel", "everyone" }) {
+				size_t length = std::char_traits<char>::length(name);
+				if (startsWith(rest, name) && endsName(rest, length)) {
+					out += std::string("<!") + name + ">";
+					i += length;
+					special = true;
+					break;
+				}
+			}
+			if (special)
+				continue;
+			if (context.matchUser) {
+				auto [id, length] = context.matchUser(rest);
+				if (!id.empty() && length > 0 && endsName(rest, length)) {
+					out += "<@" + id + ">";
+					i += length;
+					continue;
+				}
+			}
+		}
+		if (!code && c == '#' && startsWord(text, i) && context.channelId) {
+			size_t end = i + 1;
+			while (end < text.size() && (std::isalnum(static_cast<unsigned char>(text[end]))
+					|| text[end] == '_' || text[end] == '-' || (static_cast<unsigned char>(text[end]) & 0x80)))
+				end++;
+			if (end > i + 1) {
+				std::string id = context.channelId(std::string(text.substr(i + 1, end - i - 1)));
+				if (!id.empty()) {
+					out += "<#" + id + ">";
+					i = end - 1;
+					continue;
+				}
+			}
+		}
+		out += c;
+	}
+	return out;
+}
+
+
+std::string
+editableText(std::string_view text, const FormatContext& context)
+{
+	std::string out;
+	out.reserve(text.size());
+	size_t start = 0;
+	while (start < text.size()) {
+		size_t open = text.find('<', start);
+		size_t close = open == std::string_view::npos ? open : text.find('>', open);
+		if (close == std::string_view::npos) {
+			out += unescapeEntities(text.substr(start));
+			break;
+		}
+		out += unescapeEntities(text.substr(start, open - start));
+		std::string_view content = text.substr(open + 1, close - open - 1);
+		size_t bar = content.find('|');
+		std::string target(content.substr(0, bar));
+		std::string label = bar == std::string_view::npos ? std::string()
+			: unescapeEntities(content.substr(bar + 1));
+		if (startsWith(target, "@")) {
+			std::string id = target.substr(1);
+			std::string name = context.userName ? context.userName(id) : std::string();
+			out += "@" + (!name.empty() ? name : !label.empty() ? label : id);
+		} else if (startsWith(target, "#")) {
+			std::string id = target.substr(1);
+			std::string name = !label.empty() ? label
+				: context.channelName ? context.channelName(id) : std::string();
+			out += "#" + (name.empty() ? id : name);
+		} else if (startsWith(target, "!")) {
+			std::string command = target.substr(1);
+			if (command == "here" || command == "channel" || command == "everyone")
+				out += "@" + command;
+			else if (!label.empty())
+				out += label;   // subteam (@group), date (its fallback)
+			else
+				out += "@" + command;
+		} else {
+			std::string url = unescapeEntities(target);
+			std::string bare = url;
+			for (const char* scheme : { "mailto:", "https://", "http://" }) {
+				if (startsWith(bare, scheme)) {
+					bare = bare.substr(std::char_traits<char>::length(scheme));
+					break;
+				}
+			}
+			if (label.empty() || label == url || label == bare)
+				out += startsWith(url, "mailto:") ? bare : url;
+			else
+				out += label + " (" + url + ")";
+		}
+		start = close + 1;
+	}
+	return out;
+}
+
 }  // namespace natter

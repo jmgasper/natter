@@ -3,6 +3,7 @@
 #include "MessageView.h"
 
 #include "ImageCache.h"
+#include "TextLayout.h"
 #include "Messages.h"
 #include "natter/emoji.h"
 #include "natter/session.h"
@@ -13,6 +14,7 @@
 #include <MenuItem.h>
 #include <PopUpMenu.h>
 #include <ScrollBar.h>
+#include <String.h>
 #include <Window.h>
 
 #include <algorithm>
@@ -93,7 +95,7 @@ std::string ReactionGlyph(const std::string& name)
 	int tone = 0;
 	emoji::splitSkinTone(name, base, tone);
 	auto found = tone ? emoji::lookup(base, tone) : emoji::lookup(base);
-	return found ? *found : std::string();
+	return found ? DrawableEmoji(*found) : std::string();
 }
 
 }  // namespace
@@ -105,12 +107,17 @@ MessageView::MessageView(Session* session, bool thread)
 	fThreadMode(thread)
 {
 	SetViewColor(B_TRANSPARENT_COLOR);
+	// Without a layout a view's minimum is its current size, which would
+	// keep the window from making room for the thread.
+	SetExplicitMinSize(BSize(thread ? 200 : 260, 100));
+	SetExplicitPreferredSize(BSize(thread ? 300 : 560, 400));
 }
 
 void MessageView::AttachedToWindow()
 {
 	BView::AttachedToWindow();
-	SetEventMask(B_POINTER_EVENTS, 0);
+	// No B_POINTER_EVENTS mask: with it the view also gets the clicks that
+	// choose items in its own context menu, and acts on what lies beneath.
 }
 
 float MessageView::TextLeft() const
@@ -129,7 +136,7 @@ void MessageView::SetConversation(const std::string& channel, const std::string&
 	fThread = threadTs;
 	fItems.clear();
 	fHover = -1;
-	fMoreOlder = true;
+	fMoreOlder = !fThreadMode;   // a thread loads whole
 	fLoadingOlder = false;
 	fAtEnd = true;
 	Rebuild(false);
@@ -209,6 +216,8 @@ void MessageView::Rebuild(bool keepPosition)
 	fItems = std::move(items);
 	fHover = -1;
 	LayoutItems();
+	// The scroll bar first: it clamps scrolling to its range.
+	UpdateScrollBar();
 	if (keepPosition && atEnd) {
 		ScrollToEnd();
 	} else if (!anchorTs.empty()) {
@@ -344,6 +353,7 @@ void MessageView::UpdateScrollBar()
 
 void MessageView::ScrollToEnd()
 {
+	UpdateScrollBar();
 	float range = std::max(0.0f, fContentHeight - Bounds().Height());
 	BView::ScrollTo(BPoint(0, range));
 	fAtEnd = true;
@@ -352,8 +362,13 @@ void MessageView::ScrollToEnd()
 void MessageView::ScrollTo(BPoint where)
 {
 	BView::ScrollTo(where);
-	fAtEnd = fContentHeight - Bounds().Height() - where.y < 8;
-	if (where.y < 300 && !fLoadingOlder && fMoreOlder && !fChannel.empty() && !fItems.empty()) {
+	// While the layout resizes the view, its scroll bar may scroll it before
+	// FrameResized() lays the messages out again; that is not the reader
+	// leaving the end.
+	bool resizing = std::fabs(Bounds().Width() - fLaidOutWidth) > 0.5f;
+	if (!resizing)
+		fAtEnd = fContentHeight - Bounds().Height() - where.y < 8;
+	if (!resizing && where.y < 300 && !fLoadingOlder && fMoreOlder && !fChannel.empty() && !fItems.empty()) {
 		fLoadingOlder = true;
 		BMessage message(kLoadOlder);
 		message.AddString("channel", fChannel.c_str());
@@ -473,8 +488,20 @@ void MessageView::DrawItem(Item& item, BRect updateRect)
 		if (bitmap) {
 			DrawBitmap(bitmap, bitmap->Bounds(), frame, B_FILTER_BITMAP_BILINEAR);
 		} else {
+			// Loading, or it could not be fetched: the file's name holds the place.
 			SetHighColor(theme.codeBackground);
 			FillRoundRect(frame, 4, 4);
+			auto file = std::find_if(item.files.begin(), item.files.end(), [&](const auto& entry) { return entry.first == frame; });
+			if (file != item.files.end()) {
+				BString name((file->second.title.empty() ? file->second.name : file->second.title).c_str());
+				SetFont(&theme.small);
+				theme.small.TruncateString(&name, B_TRUNCATE_MIDDLE, frame.Width() - 16);
+				font_height metrics;
+				theme.small.GetHeight(&metrics);
+				SetHighColor(theme.muted);
+				DrawString(name.String(), BPoint(frame.left + (frame.Width() - theme.small.StringWidth(name.String())) / 2,
+					frame.top + (frame.Height() + metrics.ascent - metrics.descent) / 2));
+			}
 		}
 		SetHighColor(theme.codeBorder);
 		StrokeRoundRect(frame, 4, 4);

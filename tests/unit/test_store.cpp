@@ -248,6 +248,31 @@ TEST(store_edits_and_deletes)
 }
 
 
+TEST(store_loaded_thread_counts_its_replies)
+{
+	// A root whose reply_count lags the replies Slack returns with it (one
+	// arrived in real time) counts the replies held.
+	Store store;
+	fill(store);
+	std::vector<Message> replies;
+	for (const json& item : fixtureArray("conversations.replies.json", "messages"))
+		replies.push_back(Message::fromJson(item, kGeneral));
+	REQUIRE(replies.size() == 3);
+	replies.front().replyCount = 1;
+	replies.front().latestReply = replies[1].ts;
+	store.mergeReplies(kGeneral, kRoot, replies);
+	Message parent = *store.message(kGeneral, kRoot);
+	CHECK_EQ(parent.replyCount, 2);
+	CHECK_EQ(parent.latestReply, replies.back().ts);
+	CHECK_EQ(store.thread(kGeneral, kRoot).front().replyCount, 2);
+
+	// A count above the replies held (older pages not loaded) stays.
+	replies.front().replyCount = 7;
+	store.mergeReplies(kGeneral, kRoot, replies);
+	CHECK_EQ(store.message(kGeneral, kRoot)->replyCount, 7);
+}
+
+
 TEST(store_reactions)
 {
 	Store store;

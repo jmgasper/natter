@@ -44,6 +44,7 @@ enum : uint32 {
 	kSidebarTick = 'nstk',
 	kEditSave = 'neds',
 	kDownloaded = 'ndld',
+	kUploaded = 'nupd',
 	kSent = 'nsnt',
 	kQuit = 'nqit',
 };
@@ -160,12 +161,17 @@ MainWindow::MainWindow(const Credentials& credentials, const std::string& settin
 	fTopic = new BStringView("topic", "");
 	fTopic->SetHighColor(theme.muted);
 	fTopic->SetExplicitMinSize(BSize(50, B_SIZE_UNSET));
+	// A BStringView is only as wide as its text at most; with
+	// B_AUTO_UPDATE_SIZE_LIMITS that would cap the whole window's width.
+	fTitle->SetExplicitMaxSize(BSize(B_SIZE_UNLIMITED, B_SIZE_UNSET));
+	fTopic->SetExplicitMaxSize(BSize(B_SIZE_UNLIMITED, B_SIZE_UNSET));
 	fMessages = new MessageView(session, false);
 	auto* messagesScroll = new BScrollView("messages scroll", fMessages, 0, false, true, B_NO_BORDER);
 	fComposer = new Composer("composer");
 
 	fThreadTitle = new BStringView("thread title", "Thread");
 	fThreadTitle->SetFont(&titleFont);
+	fThreadTitle->SetExplicitMaxSize(BSize(B_SIZE_UNLIMITED, B_SIZE_UNSET));
 	fThreadMessages = new MessageView(session, true);
 	auto* threadScroll = new BScrollView("thread scroll", fThreadMessages, 0, false, true, B_NO_BORDER);
 	fThreadComposer = new Composer("thread composer");
@@ -221,7 +227,7 @@ MainWindow::MainWindow(const Credentials& credentials, const std::string& settin
 		message.AddBool("mentionsSelf", event.change.mentionsSelf);
 		message.AddInt32("source", static_cast<int32>(event.source));
 		if (auto* connection = std::get_if<ConnectionEvent>(&event.event)) {
-			message.AddString("connection", connectionStateName(connection->state));
+			message.AddInt32("connection", static_cast<int32>(connection->state));
 			message.AddString("connectionSource", realtimeSourceName(connection->source));
 			message.AddString("detail", connection->detail.c_str());
 			message.AddInt32("retry", connection->retryInSeconds);
@@ -240,7 +246,7 @@ MainWindow::MainWindow(const Credentials& credentials, const std::string& settin
 		Status status = session->bootstrap();
 		BMessage done(kBootstrapDone);
 		if (!status) {
-			done.AddString("error", status.error().message.c_str());
+			done.AddString("error", status.error().describe().c_str());
 			done.AddBool("auth", status.error().isAuth());
 		}
 		messenger.SendMessage(&done);
@@ -337,6 +343,9 @@ void MainWindow::SelectConversation(const std::string& channel)
 {
 	if (channel.empty())
 		return;
+	// A thread belongs to its conversation.
+	if (!fThread.empty() && channel != fChannel)
+		CloseThread();
 	fChannel = channel;
 	fSidebar->Select(channel);
 	fMessages->SetConversation(channel);
@@ -354,7 +363,7 @@ void MainWindow::SelectConversation(const std::string& channel)
 		loaded.AddString("channel", channel.c_str());
 		loaded.AddBool("more", page && page->hasMore);
 		if (!page)
-			loaded.AddString("error", page.error().message.c_str());
+			loaded.AddString("error", page.error().describe().c_str());
 		messenger.SendMessage(&loaded);
 	});
 	MarkReadSoon();
@@ -395,7 +404,7 @@ void MainWindow::OpenThread(const std::string& channel, const std::string& threa
 		loaded.AddString("channel", channel.c_str());
 		loaded.AddString("thread", thread.c_str());
 		if (!page)
-			loaded.AddString("error", page.error().message.c_str());
+			loaded.AddString("error", page.error().describe().c_str());
 		messenger.SendMessage(&loaded);
 	});
 }
@@ -456,7 +465,7 @@ void MainWindow::EditMessage(const std::string& channel, const std::string& ts)
 	}
 	if (!message)
 		return;
-	(new EditWindow(this, channel, ts, message->text))->Show();
+	(new EditWindow(this, channel, ts, editableText(message->text, fSession->store().formatContext())))->Show();
 }
 
 void MainWindow::SessionEvent(BMessage* message)
@@ -465,16 +474,16 @@ void MainWindow::SessionEvent(BMessage* message)
 	std::string channel = message->GetString("channel", "");
 	std::string thread = message->GetString("thread", "");
 	std::string ts = message->GetString("ts", "");
-	const char* connection;
-	if (message->FindString("connection", &connection) == B_OK) {
-		std::string state = connection;
+	int32 connection;
+	if (message->FindInt32("connection", &connection) == B_OK) {
+		auto state = static_cast<ConnectionState>(connection);
 		std::string source = message->GetString("connectionSource", "");
 		std::string detail = message->GetString("detail", "");
-		if (state == "Connected")
+		if (state == ConnectionState::Connected)
 			fConnection = "Connected (" + source + ")";
-		else if (state == "Polling")
+		else if (state == ConnectionState::Polling)
 			fConnection = "Connected (checking every few seconds)";
-		else if (state == "Connecting")
+		else if (state == ConnectionState::Connecting)
 			fConnection = "Connecting…";
 		else {
 			int32 retry = message->GetInt32("retry", 0);
@@ -610,6 +619,9 @@ void MainWindow::MessageReceived(BMessage* message)
 	case kThreadLoaded:
 		if (message->GetString("thread", "") == fThread)
 			fThreadMessages->Reload();
+		// The parent's reply count and last reply may have changed.
+		if (message->GetString("channel", "") == fChannel)
+			fMessages->Reload();
 		break;
 	case kChannelSelected:
 		SelectConversation(message->GetString("channel", ""));
@@ -617,7 +629,9 @@ void MainWindow::MessageReceived(BMessage* message)
 	case kSendMessage: {
 		std::string channel = message->GetString("channel", "");
 		std::string thread = message->GetString("thread", "");
-		std::string text = message->GetString("text", "");
+		std::string text = encodeMessageText(message->GetString("text", ""), session->store().encodeContext());
+		// Show the end of the conversation, where the message will appear.
+		(thread.empty() ? fMessages : fThreadMessages)->ScrollToEnd();
 		session->post([session, channel, thread, text, messenger = BMessenger(this)] {
 			PostOptions options;
 			options.threadTs = thread;
@@ -625,7 +639,7 @@ void MainWindow::MessageReceived(BMessage* message)
 			if (!sent) {
 				BMessage failed(kActionFailed);
 				failed.AddString("what", "The message could not be sent.");
-				failed.AddString("error", sent.error().message.c_str());
+				failed.AddString("error", sent.error().describe().c_str());
 				messenger.SendMessage(&failed);
 			}
 		});
@@ -664,7 +678,7 @@ void MainWindow::MessageReceived(BMessage* message)
 			if (!status) {
 				BMessage failed(kActionFailed);
 				failed.AddString("what", "The reaction could not be changed.");
-				failed.AddString("error", status.error().message.c_str());
+				failed.AddString("error", status.error().describe().c_str());
 				messenger.SendMessage(&failed);
 			}
 		});
@@ -675,13 +689,13 @@ void MainWindow::MessageReceived(BMessage* message)
 		break;
 	case kEditSave: {
 		std::string channel = message->GetString("channel", ""), ts = message->GetString("ts", "");
-		std::string text = message->GetString("text", "");
+		std::string text = encodeMessageText(message->GetString("text", ""), session->store().encodeContext());
 		session->post([session, channel, ts, text, messenger = BMessenger(this)] {
 			auto edited = session->edit(channel, ts, text);
 			if (!edited) {
 				BMessage failed(kActionFailed);
 				failed.AddString("what", "The message could not be edited.");
-				failed.AddString("error", edited.error().message.c_str());
+				failed.AddString("error", edited.error().describe().c_str());
 				messenger.SendMessage(&failed);
 			}
 		});
@@ -699,7 +713,7 @@ void MainWindow::MessageReceived(BMessage* message)
 			if (!status) {
 				BMessage failed(kActionFailed);
 				failed.AddString("what", "The message could not be deleted.");
-				failed.AddString("error", status.error().message.c_str());
+				failed.AddString("error", status.error().describe().c_str());
 				messenger.SendMessage(&failed);
 			}
 		});
@@ -760,7 +774,7 @@ void MainWindow::MessageReceived(BMessage* message)
 			BMessage done(kDownloaded);
 			done.AddString("path", path.c_str());
 			if (!status)
-				done.AddString("error", status.error().message.c_str());
+				done.AddString("error", status.error().describe().c_str());
 			messenger.SendMessage(&done);
 		});
 		break;
@@ -769,6 +783,7 @@ void MainWindow::MessageReceived(BMessage* message)
 		const char* error;
 		std::string path = message->GetString("path", "");
 		if (message->FindString("error", &error) == B_OK) {
+			SetStatus(fConnection);
 			Failed("The file could not be downloaded.", error);
 			break;
 		}
@@ -805,13 +820,18 @@ void MainWindow::MessageReceived(BMessage* message)
 			UploadOptions options;
 			options.threadTs = thread;
 			auto uploaded = session->api()->uploadFileFromPath(channel, file, options);
-			if (!uploaded) {
-				BMessage failed(kActionFailed);
-				failed.AddString("what", "The file could not be uploaded.");
-				failed.AddString("error", uploaded.error().message.c_str());
-				messenger.SendMessage(&failed);
-			}
+			BMessage done(kUploaded);
+			if (!uploaded)
+				done.AddString("error", uploaded.error().describe().c_str());
+			messenger.SendMessage(&done);
 		});
+		break;
+	}
+	case kUploaded: {
+		SetStatus(fConnection);
+		const char* error;
+		if (message->FindString("error", &error) == B_OK)
+			Failed("The file could not be uploaded.", error);
 		break;
 	}
 	case kTyping:
@@ -830,7 +850,7 @@ void MainWindow::MessageReceived(BMessage* message)
 			Status status = session->bootstrap();
 			BMessage done(kBootstrapDone);
 			if (!status)
-				done.AddString("error", status.error().message.c_str());
+				done.AddString("error", status.error().describe().c_str());
 			messenger.SendMessage(&done);
 		});
 		break;
