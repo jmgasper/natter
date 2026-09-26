@@ -127,6 +127,7 @@ public:
 
 	// ---- real time -------------------------------------------------------------------------
 	void startRealtime();
+	// Joins the real-time threads: never call it from a listener.
 	void stopRealtime();
 	RealtimeMode realtimeMode() const;
 	// The conversation (and thread) on screen: polled first in polling mode.

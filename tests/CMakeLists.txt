@@ -9,6 +9,7 @@ add_executable(natter_tests
 	unit/test_api.cpp
 	unit/test_credentials.cpp
 	unit/test_events.cpp
+	unit/test_http.cpp
 	unit/test_mrkdwn.cpp
 	unit/test_realtime.cpp
 	unit/test_store.cpp
@@ -20,7 +21,7 @@ target_compile_definitions(natter_tests PRIVATE
 	NATTER_TEST_TMP_DIR="${NATTER_TEST_TMP}")
 
 # One CTest entry per group of unit tests (the name prefix).
-foreach(group api util credentials signin ws emoji mrkdwn events store poller realtime session)
+foreach(group api http util credentials signin ws emoji mrkdwn events store poller realtime session)
 	add_test(NAME unit.${group} COMMAND natter_tests ${group}_)
 	set_tests_properties(unit.${group} PROPERTIES TIMEOUT 60)
 endforeach()
