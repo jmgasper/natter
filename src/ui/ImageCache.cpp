@@ -109,8 +109,10 @@ void ImageCache::Load(const std::string& url)
 			fetcher = fFetcher;
 		}
 		bool loaded = false;
-		// Avatars and emoji are public; files need the account's session.
-		if (url.find("files.slack.com") != std::string::npos) {
+		// Avatars and emoji are public; files and their thumbnails need the
+		// account's session, on files.slack.com or the workspace's own host.
+		if (url.find("files.slack.com") != std::string::npos || url.find("/files-pri/") != std::string::npos
+				|| url.find("/files-tmb/") != std::string::npos) {
 			loaded = fetcher && fetcher(url, data);
 		} else {
 			HttpRequest request = HttpRequest::get(url);

@@ -21,6 +21,7 @@ import copy
 import hashlib
 import http.server
 import json
+import mimetypes
 import os
 import queue
 import select
@@ -364,6 +365,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
         token, error = self.auth({})
         if error:
             return self.reply(302, "", "text/plain", {"Location": "/ssb/redirect?login=1"})
+        # /files-pri/T0NATTER-<file id>/<name>: an uploaded file comes back as
+        # it was sent; fixture files are FILE_BYTES.
+        parts = urllib.parse.urlparse(self.path).path.split("/")
+        file_id = parts[2].split("-", 1)[-1] if len(parts) > 3 else ""
+        with self.state.lock:
+            data = self.state.uploads.get(file_id)
+        if data:
+            kind = mimetypes.guess_type(parts[-1])[0] or "application/octet-stream"
+            return self.reply(200, data, kind)
         self.reply(200, FILE_BYTES, "image/png")
 
     # ---- WebSockets -------------------------------------------------------------------
@@ -639,11 +649,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 data = self.state.uploads.get(item["id"])
                 if data is None or not data:
                     return {"ok": False, "error": "file_not_found"}
-                entries.append({"id": item["id"], "title": item.get("title", ""),
-                                "name": item.get("title", ""), "size": len(data),
-                                "mimetype": "text/plain",
-                                "url_private": "%s/files-pri/T0NATTER-%s/%s" % (
-                                    self.base_url(), item["id"], item.get("title", ""))})
+                title = item.get("title", "")
+                entry = {"id": item["id"], "title": title, "name": title, "size": len(data),
+                         "mimetype": mimetypes.guess_type(title)[0] or "text/plain",
+                         "url_private": "%s/files-pri/T0NATTER-%s/%s" % (
+                             self.base_url(), item["id"], title)}
+                # Images get a thumbnail (the file itself) and, for PNG, their size.
+                if entry["mimetype"].startswith("image/"):
+                    entry["thumb_360"] = entry["url_private"]
+                    if data[:8] == b"\x89PNG\r\n\x1a\n" and len(data) >= 24:
+                        entry["original_w"], entry["original_h"] = struct.unpack(">II", data[16:24])
+                entries.append(entry)
         channel = params.get("channel_id")
         if channel:
             message = {"type": "message", "subtype": "file_share", "user": "U03SELF",
