@@ -1,10 +1,16 @@
 # Natter
 
-Natter is a native Slack client for [Haiku](https://www.haiku-os.org/). This
-repository holds its portable core: a UI-free C++20 library (`natter_core`),
-a command line driver (`natter-cli`) and the tests. The Haiku Interface Kit UI
-will be built on top of the core; see [docs/CORE-API.md](docs/CORE-API.md)
-for the classes and threading rules it uses.
+Natter is a native Slack client for [Haiku](https://www.haiku-os.org/),
+written with the Interface Kit. It has:
+- channels and direct messages, with unread and mention counts;
+- threads in a side panel, reactions, files and images, and custom emoji;
+- editing, deleting and uploads;
+- notifications and typing indicators, kept up to date in real time.
+
+This repository holds the app (`src/ui`), its portable core (a UI-free C++20
+library, `natter_core`), a command line driver (`natter-cli`) and the tests.
+See [docs/CORE-API.md](docs/CORE-API.md) for the core's classes and threading
+rules.
 
 The core builds and runs on Linux (for development and tests) and on Haiku
 (gcc 13). Its only system dependencies are libcurl, OpenSSL 3 and the C++
@@ -59,8 +65,21 @@ cmake -S . -B build
 cmake --build build
 ```
 
-On Haiku, CMake adds `libnetwork` for the socket calls. Keep build
-directories outside the source tree if disk space is tight.
+On Haiku, CMake adds `libnetwork` for the socket calls and builds the app,
+`Natter`, with its resources and icon. Keep build directories outside the
+source tree if disk space is tight.
+
+To make a package, build a release and run `tools/package-haiku.sh`:
+
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DNATTER_BUILD_TESTS=OFF
+cmake --build build --target Natter
+tools/package-haiku.sh build        # build/natter-<version>-1-<arch>.hpkg
+```
+
+The package installs `apps/Natter` with a Deskbar entry. It requires
+`noto_emoji`, which Haiku's text rendering uses for emoji. The app server
+picks up a newly installed font only after a restart.
 
 Options:
 
@@ -69,6 +88,13 @@ Options:
 | `NATTER_BUILD_TESTS` | ON | unit, end-to-end and integration tests |
 | `NATTER_BUILD_CLI` | ON | `natter-cli` |
 | `NATTER_WARNINGS_AS_ERRORS` | OFF | `-Werror` for the core |
+| `NATTER_WEBKIT` | (empty) | Summit's WebKit engine directory: adds sign-in on Slack's own web page |
+
+With `NATTER_WEBKIT`, the sign-in window offers **Sign in with Slack's web
+page**. It opens `slack.com` in Summit's engine, with a private profile.
+After you sign in, Natter reads the web client's session tokens and its
+HttpOnly `d` cookie through the engine's embedding API. The package then
+requires `summit_webkit`.
 
 ## Testing
 
@@ -91,6 +117,18 @@ cd ../natter-build && ctest --output-on-failure
   `NATTER_TEST_COOKIE` and `NATTER_TEST_WORKSPACE` are set, and is reported
   as skipped otherwise. It is read-only unless you also set
   `NATTER_TEST_CHANNEL` and `NATTER_TEST_ALLOW_WRITE=1`.
+
+To try the app without a Slack account, start the mock server and point the
+sign-in window at it:
+
+```sh
+python3 tests/mock/mock_slack.py --fixtures tests/fixtures --port 8787 &
+NATTER_API_BASE=http://127.0.0.1:8787/api/ build/Natter
+```
+
+Sign in with any workspace name and the cookie `xoxd-e2e%2Fcookie%3D`.
+Accounts are saved in `~/config/settings/Natter/accounts/<team>.json`,
+mode 0600.
 
 ## Signing in
 
@@ -151,9 +189,12 @@ tools/gen_emoji_table.py /tmp/emoji.json src/core/emoji_table.inc
 ```
 include/natter/   public headers (natter.h includes them all)
 src/core/         the library
+src/ui/           the Haiku app
 src/cli/          natter-cli
+resources/        the app's resource definition and HVIF icon
 tests/            unit tests, fixtures, the mock server, e2e and integration
-tools/            the emoji table generator
+tools/            the emoji table and icon generators, the cross-compile
+                  check and the package script
 vendor/nlohmann/  nlohmann/json 3.12.0 (MIT)
 docs/             CORE-API.md
 ```

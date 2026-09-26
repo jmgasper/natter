@@ -16,6 +16,7 @@
 #include <TextControl.h>
 #include <TextView.h>
 
+#include <cstdlib>
 #include <thread>
 
 namespace natter::ui {
@@ -88,16 +89,15 @@ SignInWindow::SignInWindow()
 	fStatus = new BStringView("status", "");
 	fStatus->SetExplicitMaxSize(BSize(B_SIZE_UNLIMITED, B_SIZE_UNSET));
 	fSignIn = new BButton("Sign in", new BMessage(kSignIn));
+	BLayoutBuilder::Group<> layout(this, B_VERTICAL, B_USE_DEFAULT_SPACING);
+	layout.SetInsets(B_USE_WINDOW_INSETS);
+#if NATTER_WEBKIT
+	// Signing in on Slack's own page needs Summit's engine.
 	auto* browser = new BButton("Sign in with Slack's web page…", new BMessage(kBrowser));
-#if !NATTER_WEBKIT
-	browser->Hide();
+	browser->SetExplicitAlignment(BAlignment(B_ALIGN_LEFT, B_ALIGN_MIDDLE));
+	layout.Add(browser);
 #endif
-	BLayoutBuilder::Group<>(this, B_VERTICAL, B_USE_DEFAULT_SPACING)
-		.SetInsets(B_USE_WINDOW_INSETS)
-		.AddGroup(B_HORIZONTAL)
-			.Add(browser)
-			.AddGlue()
-		.End()
+	layout
 		.Add(fTabs)
 		.AddGroup(B_HORIZONTAL)
 			.Add(fStatus)
@@ -106,6 +106,12 @@ SignInWindow::SignInWindow()
 			.Add(fSignIn)
 		.End();
 	SetDefaultButton(fSignIn);
+	// As tall as the content needs at this width.
+	float width = Bounds().Width();
+	float minHeight, maxHeight, height = GetLayout()->PreferredSize().Height();
+	if (GetLayout()->HasHeightForWidth())
+		GetLayout()->GetHeightForWidth(width, &minHeight, &maxHeight, &height);
+	ResizeTo(width, height);
 	CenterOnScreen();
 	fWorkspace->MakeFocus(true);
 }
@@ -146,11 +152,13 @@ void SignInWindow::MessageReceived(BMessage* message)
 		}
 		SetBusy(true, "Signing in…");
 		BMessenger target(this);
+		// For tests: Slack's API somewhere else (tests/mock/mock_slack.py).
+		std::string apiBase = getenv("NATTER_API_BASE") ? getenv("NATTER_API_BASE") : "";
 		std::thread([=] {
 			auto transport = defaultTransport();
 			BMessage result(kSignInResult);
 			if (session) {
-				auto credentials = signin::signInWithCookie(*transport, workspace, cookie);
+				auto credentials = signin::signInWithCookie(*transport, workspace, cookie, apiBase);
 				if (credentials)
 					result.AddString("credentials", credentials->toJson().dump().c_str());
 				else
@@ -159,6 +167,7 @@ void SignInWindow::MessageReceived(BMessage* message)
 				Credentials credentials;
 				credentials.token = token;
 				credentials.appToken = appToken;
+				credentials.apiBase = apiBase;
 				auto info = signin::validate(*transport, credentials);
 				if (info)
 					result.AddString("credentials", credentials.toJson().dump().c_str());
