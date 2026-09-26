@@ -65,6 +65,7 @@ if(HAIKU)
 		src/ui/MainWindow.cpp
 		src/ui/MessageView.cpp
 		src/ui/SignInWindow.cpp
+		src/ui/SearchWindow.cpp
 		src/ui/Sidebar.cpp
 		src/ui/TextLayout.cpp
 		src/ui/Theme.cpp

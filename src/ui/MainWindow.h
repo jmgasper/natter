@@ -4,6 +4,7 @@
 
 #include "natter/credentials.h"
 
+#include <Messenger.h>
 #include <Window.h>
 
 #include <memory>
@@ -52,6 +53,7 @@ private:
 	void Failed(const std::string& what, const std::string& error);
 	void OpenURL(const std::string& url);
 	void EditMessage(const std::string& channel, const std::string& ts);
+	void ShowMessage(const std::string& channel, const std::string& ts, const std::string& thread);
 
 	std::unique_ptr<Session> fSession;
 	int fListener = 0;
@@ -68,6 +70,9 @@ private:
 	Composer* fThreadComposer;
 	BStringView* fStatus;
 	BFilePanel* fOpenPanel = nullptr;
+	BMessenger fSearch;
+	std::string fReveal;           // a message to show once it is loaded
+	std::string fRevealReply;      // the same, in the thread
 	std::string fChannel;
 	std::string fThread;
 	std::string fConnection;

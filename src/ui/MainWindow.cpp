@@ -5,6 +5,7 @@
 #include "Composer.h"
 #include "ImageCache.h"
 #include "MessageView.h"
+#include "SearchWindow.h"
 #include "Messages.h"
 #include "Sidebar.h"
 #include "Theme.h"
@@ -272,6 +273,7 @@ void MainWindow::BuildMenu(BMenu*& workspaces)
 	auto* bar = new BMenuBar("menu");
 	auto* file = new BMenu("File");
 	file->AddItem(new BMenuItem("Jump to conversation…", new BMessage(kJumpTo), 'K'));
+	file->AddItem(new BMenuItem("Search messages…", new BMessage(kSearch), 'F'));
 	file->AddItem(new BMenuItem("Refresh", new BMessage(kRefresh), 'R'));
 	file->AddSeparatorItem();
 	file->AddItem(new BMenuItem("Add workspace…", new BMessage(kAddWorkspace)));
@@ -372,6 +374,46 @@ void MainWindow::SelectConversation(const std::string& channel)
 	settings.AddString("team", fTeamId.c_str());
 	settings.AddString("channel", channel.c_str());
 	be_app->PostMessage(&settings);
+}
+
+void MainWindow::ShowMessage(const std::string& channel, const std::string& ts, const std::string& thread)
+{
+	if (channel.empty() || ts.empty())
+		return;
+	Activate(true);
+	if (channel != fChannel)
+		SelectConversation(channel);
+	if (!thread.empty()) {
+		// A reply: its thread, with the parent in view if it is loaded.
+		fRevealReply = ts;
+		OpenThread(channel, thread);
+		fMessages->Reveal(thread);
+		return;
+	}
+	fReveal = ts;
+	if (fMessages->Reveal(ts)) {
+		fReveal.clear();
+		return;
+	}
+	// Not loaded: the messages up to it and a page after it.
+	Session* session = fSession.get();
+	session->post([session, channel, ts, messenger = BMessenger(this)] {
+		HistoryOptions before;
+		before.latest = ts;
+		before.inclusive = true;
+		before.limit = 30;
+		auto page = session->loadHistory(channel, before);
+		HistoryOptions after;
+		after.oldest = ts;
+		after.limit = 30;
+		session->loadHistory(channel, after);
+		BMessage loaded(kHistoryLoaded);
+		loaded.AddString("channel", channel.c_str());
+		loaded.AddBool("more", page && page->hasMore);
+		if (!page)
+			loaded.AddString("error", page.error().describe().c_str());
+		messenger.SendMessage(&loaded);
+	});
 }
 
 void MainWindow::MarkReadSoon()
@@ -609,6 +651,8 @@ void MainWindow::MessageReceived(BMessage* message)
 		if (channel == fChannel) {
 			fMessages->SetLoadingOlder(false, message->GetBool("more", false));
 			fMessages->Reload();
+			if (!fReveal.empty() && fMessages->Reveal(fReveal))
+				fReveal.clear();
 			MarkReadSoon();
 		}
 		const char* error;
@@ -617,8 +661,11 @@ void MainWindow::MessageReceived(BMessage* message)
 		break;
 	}
 	case kThreadLoaded:
-		if (message->GetString("thread", "") == fThread)
+		if (message->GetString("thread", "") == fThread) {
 			fThreadMessages->Reload();
+			if (!fRevealReply.empty() && fThreadMessages->Reveal(fRevealReply))
+				fRevealReply.clear();
+		}
 		// The parent's reply count and last reply may have changed.
 		if (message->GetString("channel", "") == fChannel)
 			fMessages->Reload();
@@ -857,6 +904,21 @@ void MainWindow::MessageReceived(BMessage* message)
 	case kJumpTo:
 		fSidebar->MessageReceived(message);
 		break;
+	case kSearch: {
+		if (fSearch.IsValid()) {
+			BMessage activate(B_WINDOW_ACTIVATED);
+			fSearch.SendMessage(&activate);
+			break;
+		}
+		std::string team = fSession->store().team().name;
+		auto* search = new SearchWindow(fSession.get(), BMessenger(this), team.empty() ? "Slack" : team.c_str());
+		fSearch = BMessenger(search);
+		search->Show();
+		break;
+	}
+	case kShowMessage:
+		ShowMessage(message->GetString("channel", ""), message->GetString("ts", ""), message->GetString("thread", ""));
+		break;
 	case kImageLoaded:
 		fMessages->Invalidate();
 		fThreadMessages->Invalidate();
@@ -893,6 +955,12 @@ void MainWindow::MessageReceived(BMessage* message)
 
 bool MainWindow::QuitRequested()
 {
+	// The search window uses this window's session.
+	if (fSearch.LockTarget()) {
+		BLooper* search = nullptr;
+		fSearch.Target(&search);
+		search->Quit();
+	}
 	// The session's real-time threads must stop before the window goes away.
 	if (fSession) {
 		fSession->removeListener(fListener);

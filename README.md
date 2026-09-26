@@ -5,6 +5,7 @@ written with the Interface Kit. It has:
 - channels and direct messages, with unread and mention counts;
 - threads in a side panel, reactions, files and images, and custom emoji;
 - editing, deleting and uploads;
+- message search (Command+F), which opens a result in its conversation;
 - notifications and typing indicators, kept up to date in real time.
 
 This repository holds the app (`src/ui`), its portable core (a UI-free C++20

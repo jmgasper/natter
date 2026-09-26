@@ -136,6 +136,7 @@ void MessageView::SetConversation(const std::string& channel, const std::string&
 	fThread = threadTs;
 	fItems.clear();
 	fHover = -1;
+	fRevealed.clear();
 	fMoreOlder = !fThreadMode;   // a thread loads whole
 	fLoadingOlder = false;
 	fAtEnd = true;
@@ -351,6 +352,22 @@ void MessageView::UpdateScrollBar()
 	bar->SetSteps(24, std::max(24.0f, visible - 40));
 }
 
+bool MessageView::Reveal(const std::string& ts)
+{
+	for (const Item& item : fItems) {
+		if (item.message.ts != ts)
+			continue;
+		fRevealed = ts;
+		UpdateScrollBar();
+		// A third of the way down, with what led up to it above.
+		float range = std::max(0.0f, fContentHeight - Bounds().Height());
+		ScrollTo(BPoint(0, std::clamp(item.top - Bounds().Height() / 3, 0.0f, range)));
+		Invalidate();
+		return true;
+	}
+	return false;
+}
+
 void MessageView::ScrollToEnd()
 {
 	UpdateScrollBar();
@@ -423,7 +440,10 @@ void MessageView::Draw(BRect updateRect)
 			SetHighColor(theme.text);
 			DrawString(item.dayLabel.c_str(), BPoint(pill.left + 10, middle + 4));
 		}
-		if (static_cast<int>(index) == fHover) {
+		if (!fRevealed.empty() && item.message.ts == fRevealed) {
+			SetHighColor(Mix(theme.background, theme.mention, 0.6f));
+			FillRect(BRect(0, item.top, Bounds().right, item.top + item.height));
+		} else if (static_cast<int>(index) == fHover) {
 			SetHighColor(theme.hover);
 			FillRect(BRect(0, item.top, Bounds().right, item.top + item.height));
 		}

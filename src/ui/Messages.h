@@ -40,6 +40,8 @@ enum : uint32 {
 	kUploadFile = 'nupl',
 	kFileChosen = 'nfch',          // refs from the file panel
 	kJumpTo = 'njmp',
+	kSearch = 'nsrc',
+	kShowMessage = 'nshm',         // channel, ts, thread (optional)
 	kAbout = 'nabt',
 };
 

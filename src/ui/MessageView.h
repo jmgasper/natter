@@ -33,6 +33,9 @@ public:
 	void Reload();
 	void ScrollToEnd();
 	void SetLoadingOlder(bool loading, bool more);
+	// Scrolls to a message and marks it (a search result, a link to it);
+	// false when the conversation does not hold it (yet).
+	bool Reveal(const std::string& ts);
 
 	void AttachedToWindow() override;
 	void Draw(BRect updateRect) override;
@@ -80,6 +83,7 @@ private:
 	std::vector<Item> fItems;
 	float fContentHeight = 0;
 	int fHover = -1;
+	std::string fRevealed;          // the message Reveal() marked
 	float fLaidOutWidth = 0;
 	bool fLoadingOlder = false;
 	bool fMoreOlder = true;
