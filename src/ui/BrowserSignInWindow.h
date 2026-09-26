@@ -35,6 +35,10 @@ private:
 	BWebKitView* fView;
 	BStringView* fStatus;
 	std::string fTokens;
+	std::string fSignInUrl = "https://slack.com/signin";
+	std::string fClientPrefix = "app.slack.com/client";   // the web client, once signed in
+	std::string fCookieUrl = "https://slack.com/";
+	std::string fApiBase;                                   // NATTER_API_BASE, for tests
 	bool fChecking = false;
 	bool fDone = false;
 };

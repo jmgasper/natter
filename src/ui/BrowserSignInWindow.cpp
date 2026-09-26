@@ -13,6 +13,7 @@
 #include <WebKit/WebKitEmbedding.h>
 #include <WebKit/WebKitView.h>
 
+#include <cstdlib>
 #include <thread>
 
 namespace natter::ui {
@@ -52,7 +53,17 @@ BrowserSignInWindow::BrowserSignInWindow()
 			.Add(fStatus)
 		.End();
 	CenterOnScreen();
-	fView->LoadURL("https://slack.com/signin");
+	// For tests, the mock server's web sign-in (NATTER_API_BASE, as for the
+	// other sign-in methods); otherwise Slack's.
+	const char* apiBase = getenv("NATTER_API_BASE");
+	if (apiBase && *apiBase) {
+		fApiBase = apiBase;
+		std::string origin = fApiBase.substr(0, fApiBase.find('/', fApiBase.find("://") + 3));
+		fSignInUrl = origin + "/signin";
+		fClientPrefix = origin + "/client";
+		fCookieUrl = origin + "/";
+	}
+	fView->LoadURL(fSignInUrl.c_str());
 }
 
 BrowserSignInWindow::~BrowserSignInWindow()
@@ -81,7 +92,7 @@ void BrowserSignInWindow::MessageReceived(BMessage* message)
 	case B_WEBKIT_STATE_CHANGED: {
 		std::string url = message->GetString("url", "");
 		// The web client lives at app.slack.com/client/<team>/...
-		if (url.find("app.slack.com/client") != std::string::npos && !message->GetBool("loading", true))
+		if (url.find(fClientPrefix) != std::string::npos && !message->GetBool("loading", true))
 			Check();
 		break;
 	}
@@ -94,7 +105,7 @@ void BrowserSignInWindow::MessageReceived(BMessage* message)
 			break;   // not signed in yet
 		fTokens = tokens;
 		fChecking = true;
-		fView->GetCookies("https://slack.com/", BMessenger(this), kReadCookies);
+		fView->GetCookies(fCookieUrl.c_str(), BMessenger(this), kReadCookies);
 		break;
 	}
 	case B_WEBKIT_COOKIES: {
@@ -116,13 +127,15 @@ void BrowserSignInWindow::MessageReceived(BMessage* message)
 		fStatus->SetText("Signed in; checking with Slack…");
 		std::vector<signin::LocalConfigTeam> list = teams.value();
 		BMessenger target(this);
-		std::thread([list, cookie, target] {
+		std::string apiBase = fApiBase;
+		std::thread([list, cookie, target, apiBase] {
 			auto transport = defaultTransport();
 			for (const auto& team : list) {
 				Credentials credentials;
 				credentials.token = team.token;
 				credentials.cookie = normalizeCookie(cookie);
 				credentials.workspace = team.url.empty() ? team.domain + ".slack.com" : team.url;
+				credentials.apiBase = apiBase;
 				auto info = signin::validate(*transport, credentials);
 				BMessage result(kSignInResult);
 				if (info)

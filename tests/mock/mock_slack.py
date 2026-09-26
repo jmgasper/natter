@@ -319,6 +319,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     "messages": {c: sorted(m.keys()) for c, m in self.state.messages.items()}})
         if path in ("/", "/messages", "/ssb/redirect"):
             return self.workspace_page(path)
+        if path == "/signin" or path.startswith("/client"):
+            return self.web_client(path)
         if path.startswith("/files-pri/"):
             return self.download()
         if path.startswith("/api/"):
@@ -359,6 +361,22 @@ class Handler(http.server.BaseHTTPRequestHandler):
             # The real thing answers the logged-in page with a 403.
             return self.reply(403, body, "text/html; charset=utf-8")
         return self.reply(200, '<html><script>var boot_data = {"api_token":null};</script></html>',
+                          "text/html; charset=utf-8")
+
+    def web_client(self, path):
+        """Slack's web sign-in, as a browser sees it: signing in leaves the d
+        cookie (HttpOnly) and the tokens in localStorage "localConfig_v2", and
+        opens the web client at /client/<team>."""
+        if path == "/signin":
+            config = {"teams": {"T0NATTER": {"id": "T0NATTER", "name": "Natter Test", "domain": "natter-test",
+                                             "url": self.base_url() + "/", "token": TOKEN}}}
+            body = ("<html><head><title>Sign in</title></head><body><p>Signing in...</p><script>"
+                    "localStorage.setItem('localConfig_v2', %s);"
+                    "setTimeout(function () { location.href = '/client/T0NATTER'; }, 300);"
+                    "</script></body></html>" % json.dumps(json.dumps(config)))
+            return self.reply(200, body, "text/html; charset=utf-8",
+                              {"Set-Cookie": "d=%s; Path=/; HttpOnly" % COOKIE})
+        return self.reply(200, "<html><head><title>Slack</title></head><body>The web client</body></html>",
                           "text/html; charset=utf-8")
 
     def download(self):
