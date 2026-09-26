@@ -24,7 +24,8 @@ cp "$ROOT/README.md" "$ROOT/LICENSE" "$STAGE/documentation/packages/natter/"
 
 WEBKIT=""
 if readelf -d "$STAGE/apps/Natter/Natter" | grep -q "libWebKit"; then
-	WEBKIT="	lib:libWebKit"
+	# Summit's engine, in its own directory (/boot/system/lib/summit-webkit).
+	WEBKIT="	summit_webkit >= 1.10.0"
 fi
 cat > "$STAGE/.PackageInfo" <<INFO
 name			natter
