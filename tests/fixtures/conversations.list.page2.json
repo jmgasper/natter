@@ -1,0 +1,104 @@
+{
+ "ok": true,
+ "channels": [
+  {
+   "id": "D04ALICE",
+   "created": 1700000000,
+   "is_archived": false,
+   "is_im": true,
+   "is_org_shared": false,
+   "context_team_id": "T0NATTER",
+   "updated": 1727000000,
+   "user": "U01ALICE",
+   "is_user_deleted": false,
+   "priority": 0.5
+  },
+  {
+   "id": "G05MPIM",
+   "name": "mpdm-alice--bob--natter-1",
+   "is_channel": false,
+   "is_group": true,
+   "is_im": false,
+   "is_mpim": true,
+   "is_private": true,
+   "created": 1700000000,
+   "is_archived": false,
+   "is_general": false,
+   "unlinked": 0,
+   "name_normalized": "mpdm-alice--bob--natter-1",
+   "is_shared": false,
+   "is_org_shared": false,
+   "is_member": true,
+   "topic": {
+    "value": "",
+    "creator": "",
+    "last_set": 0
+   },
+   "purpose": {
+    "value": "",
+    "creator": "",
+    "last_set": 0
+   },
+   "num_members": 3
+  },
+  {
+   "id": "C06OLD",
+   "name": "old-project",
+   "is_channel": true,
+   "is_group": false,
+   "is_im": false,
+   "is_mpim": false,
+   "is_private": false,
+   "created": 1700000000,
+   "is_archived": true,
+   "is_general": false,
+   "unlinked": 0,
+   "name_normalized": "old-project",
+   "is_shared": false,
+   "is_org_shared": false,
+   "is_member": false,
+   "topic": {
+    "value": "",
+    "creator": "",
+    "last_set": 0
+   },
+   "purpose": {
+    "value": "",
+    "creator": "",
+    "last_set": 0
+   },
+   "num_members": 4
+  },
+  {
+   "id": "C07NOTMINE",
+   "name": "announcements",
+   "is_channel": true,
+   "is_group": false,
+   "is_im": false,
+   "is_mpim": false,
+   "is_private": false,
+   "created": 1700000000,
+   "is_archived": false,
+   "is_general": false,
+   "unlinked": 0,
+   "name_normalized": "announcements",
+   "is_shared": false,
+   "is_org_shared": false,
+   "is_member": false,
+   "topic": {
+    "value": "",
+    "creator": "",
+    "last_set": 0
+   },
+   "purpose": {
+    "value": "",
+    "creator": "",
+    "last_set": 0
+   },
+   "num_members": 40
+  }
+ ],
+ "response_metadata": {
+  "next_cursor": ""
+ }
+}

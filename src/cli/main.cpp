@@ -168,6 +168,8 @@ printMessage(Session& session, const Message& message, bool asJson)
 	std::string author = !message.user.empty() ? session.store().userName(message.user)
 		: !message.username.empty() ? message.username : message.botId;
 	std::string text = session.format(message).plainText();
+	if (text.empty() && message.attachments.is_array() && !message.attachments.empty())
+		text = jStr(message.attachments[0], "fallback", jStr(message.attachments[0], "text"));
 	std::string extras;
 	if (message.replyCount > 0)
 		extras += " [" + std::to_string(message.replyCount) + " replies]";

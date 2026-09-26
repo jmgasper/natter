@@ -1,0 +1,94 @@
+{
+ "ok": true,
+ "members": [
+  {
+   "id": "U01ALICE",
+   "team_id": "T0NATTER",
+   "name": "alice",
+   "deleted": false,
+   "color": "9f69e7",
+   "real_name": "Alice Anderson",
+   "tz": "Australia/Brisbane",
+   "tz_label": "AEST",
+   "tz_offset": 36000,
+   "profile": {
+    "real_name": "Alice Anderson",
+    "display_name": "ali",
+    "title": "",
+    "status_text": "",
+    "status_emoji": "",
+    "team": "T0NATTER",
+    "image_24": "https://avatars.example/U01ALICE_24.png",
+    "image_48": "https://avatars.example/U01ALICE_48.png",
+    "image_72": "https://avatars.example/U01ALICE_72.png",
+    "image_192": "https://avatars.example/U01ALICE_192.png"
+   },
+   "is_admin": false,
+   "is_owner": false,
+   "is_bot": false,
+   "is_app_user": false,
+   "updated": 1727000000,
+   "presence": "active"
+  },
+  {
+   "id": "U02BOB",
+   "team_id": "T0NATTER",
+   "name": "bob",
+   "deleted": false,
+   "color": "9f69e7",
+   "real_name": "Bob Brown",
+   "tz": "Australia/Brisbane",
+   "tz_label": "AEST",
+   "tz_offset": 36000,
+   "profile": {
+    "real_name": "Bob Brown",
+    "display_name": "",
+    "title": "",
+    "status_text": "",
+    "status_emoji": "",
+    "team": "T0NATTER",
+    "image_24": "https://avatars.example/U02BOB_24.png",
+    "image_48": "https://avatars.example/U02BOB_48.png",
+    "image_72": "https://avatars.example/U02BOB_72.png",
+    "image_192": "https://avatars.example/U02BOB_192.png"
+   },
+   "is_admin": false,
+   "is_owner": false,
+   "is_bot": false,
+   "is_app_user": false,
+   "updated": 1727000000
+  },
+  {
+   "id": "U03SELF",
+   "team_id": "T0NATTER",
+   "name": "natter",
+   "deleted": false,
+   "color": "9f69e7",
+   "real_name": "Natter Tester",
+   "tz": "Australia/Brisbane",
+   "tz_label": "AEST",
+   "tz_offset": 36000,
+   "profile": {
+    "real_name": "Natter Tester",
+    "display_name": "natter",
+    "title": "",
+    "status_text": "",
+    "status_emoji": "",
+    "team": "T0NATTER",
+    "image_24": "https://avatars.example/U03SELF_24.png",
+    "image_48": "https://avatars.example/U03SELF_48.png",
+    "image_72": "https://avatars.example/U03SELF_72.png",
+    "image_192": "https://avatars.example/U03SELF_192.png"
+   },
+   "is_admin": false,
+   "is_owner": false,
+   "is_bot": false,
+   "is_app_user": false,
+   "updated": 1727000000
+  }
+ ],
+ "cache_ts": 1727000000,
+ "response_metadata": {
+  "next_cursor": "dXNlcjpVMDNTRUxG"
+ }
+}

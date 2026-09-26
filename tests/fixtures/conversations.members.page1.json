@@ -1,0 +1,10 @@
+{
+ "ok": true,
+ "members": [
+  "U01ALICE",
+  "U02BOB"
+ ],
+ "response_metadata": {
+  "next_cursor": "bWVtYmVyczoy"
+ }
+}

@@ -1,0 +1,92 @@
+{
+ "ok": true,
+ "channels": [
+  {
+   "id": "C01GENERAL",
+   "name": "general",
+   "is_channel": true,
+   "is_group": false,
+   "is_im": false,
+   "is_mpim": false,
+   "is_private": false,
+   "created": 1700000000,
+   "is_archived": false,
+   "is_general": true,
+   "unlinked": 0,
+   "name_normalized": "general",
+   "is_shared": false,
+   "is_org_shared": false,
+   "is_member": true,
+   "topic": {
+    "value": "Company-wide *news*",
+    "creator": "U01ALICE",
+    "last_set": 1700000100
+   },
+   "purpose": {
+    "value": "Everyone",
+    "creator": "U01ALICE",
+    "last_set": 1700000100
+   },
+   "num_members": 4
+  },
+  {
+   "id": "C02RANDOM",
+   "name": "random",
+   "is_channel": true,
+   "is_group": false,
+   "is_im": false,
+   "is_mpim": false,
+   "is_private": false,
+   "created": 1700000000,
+   "is_archived": false,
+   "is_general": false,
+   "unlinked": 0,
+   "name_normalized": "random",
+   "is_shared": false,
+   "is_org_shared": false,
+   "is_member": true,
+   "topic": {
+    "value": "",
+    "creator": "",
+    "last_set": 0
+   },
+   "purpose": {
+    "value": "",
+    "creator": "",
+    "last_set": 0
+   },
+   "num_members": 4
+  },
+  {
+   "id": "G03SECRET",
+   "name": "secret",
+   "is_channel": false,
+   "is_group": true,
+   "is_im": false,
+   "is_mpim": false,
+   "is_private": true,
+   "created": 1700000000,
+   "is_archived": false,
+   "is_general": false,
+   "unlinked": 0,
+   "name_normalized": "secret",
+   "is_shared": false,
+   "is_org_shared": false,
+   "is_member": true,
+   "topic": {
+    "value": "",
+    "creator": "",
+    "last_set": 0
+   },
+   "purpose": {
+    "value": "",
+    "creator": "",
+    "last_set": 0
+   },
+   "num_members": 2
+  }
+ ],
+ "response_metadata": {
+  "next_cursor": "dGVhbTpDMDZPTEQ="
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "ok": true,
+ "channel": "C01GENERAL",
+ "ts": "1727000400.000600",
+ "message": {
+  "type": "message",
+  "user": "U03SELF",
+  "text": "posted from natter",
+  "ts": "1727000400.000600",
+  "team": "T0NATTER",
+  "bot_id": null
+ }
+}

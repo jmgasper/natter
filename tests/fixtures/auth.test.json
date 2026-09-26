@@ -1,0 +1,9 @@
+{
+ "ok": true,
+ "url": "https://natter-test.slack.com/",
+ "team": "Natter Test",
+ "user": "natter",
+ "team_id": "T0NATTER",
+ "user_id": "U03SELF",
+ "is_enterprise_install": false
+}

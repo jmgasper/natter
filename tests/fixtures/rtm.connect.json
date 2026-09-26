@@ -1,0 +1,13 @@
+{
+ "ok": true,
+ "url": "wss://wss-primary.slack.com/websocket/AbCdEf",
+ "team": {
+  "id": "T0NATTER",
+  "name": "Natter Test",
+  "domain": "natter-test"
+ },
+ "self": {
+  "id": "U03SELF",
+  "name": "natter"
+ }
+}

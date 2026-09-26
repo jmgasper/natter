@@ -1,0 +1,44 @@
+{
+ "ok": true,
+ "channels": [
+  {
+   "id": "C01GENERAL",
+   "name": "general",
+   "is_archived": false,
+   "is_general": true,
+   "is_member": true,
+   "is_muted": false,
+   "last_read": "1727000100.000200",
+   "latest": "1727000300.000500",
+   "unread_count": 4,
+   "unread_count_display": 3,
+   "mention_count": 1,
+   "mention_count_display": 1
+  }
+ ],
+ "groups": [
+  {
+   "id": "G03SECRET",
+   "name": "secret",
+   "is_archived": false,
+   "is_member": true,
+   "is_muted": false,
+   "last_read": "1727000000.000000",
+   "unread_count": 0,
+   "unread_count_display": 0,
+   "mention_count": 0,
+   "mention_count_display": 0
+  }
+ ],
+ "mpims": [],
+ "ims": [
+  {
+   "id": "D04ALICE",
+   "user_id": "U01ALICE",
+   "is_open": true,
+   "last_read": "1726000000.000100",
+   "latest": "1727000000.000300",
+   "dm_count": 2
+  }
+ ]
+}

@@ -1,0 +1,40 @@
+{
+ "ok": true,
+ "channel": {
+  "id": "C01GENERAL",
+  "name": "general",
+  "is_channel": true,
+  "is_group": false,
+  "is_im": false,
+  "is_mpim": false,
+  "is_private": false,
+  "created": 1700000000,
+  "is_archived": false,
+  "is_general": true,
+  "unlinked": 0,
+  "name_normalized": "general",
+  "is_shared": false,
+  "is_org_shared": false,
+  "is_member": true,
+  "topic": {
+   "value": "Company-wide *news*",
+   "creator": "U01ALICE",
+   "last_set": 1700000100
+  },
+  "purpose": {
+   "value": "Everyone",
+   "creator": "U01ALICE",
+   "last_set": 1700000100
+  },
+  "num_members": 4,
+  "last_read": "1727000100.000200",
+  "unread_count": 3,
+  "unread_count_display": 2,
+  "latest": {
+   "type": "message",
+   "user": "U01ALICE",
+   "text": "Welcome",
+   "ts": "1727000300.000500"
+  }
+ }
+}

@@ -1,0 +1,15 @@
+{
+ "ok": true,
+ "channel": "C01GENERAL",
+ "ts": "1727000100.000200",
+ "text": "hello again",
+ "message": {
+  "type": "message",
+  "user": "U03SELF",
+  "text": "hello again",
+  "edited": {
+   "user": "U03SELF",
+   "ts": "1727000500.000000"
+  }
+ }
+}

@@ -478,6 +478,7 @@ public:
 		}
 
 		// List items: "• x", "- x", "1. x", with leading spaces for nesting.
+		// ("* x" is not one: Slack shows it as typed.)
 		size_t p = 0;
 		int spaces = 0;
 		while (p < line.size() && (line[p] == ' ' || line[p] == '\t')) {
@@ -486,7 +487,7 @@ public:
 		}
 		std::string_view rest = line.substr(p);
 		static const char* kBullets[] = {"\xE2\x80\xA2 ", "\xE2\x97\xA6 ",
-			"\xE2\x96\xAA ", "\xE2\x96\xAB ", "\xE2\x80\xA3 ", "- ", "* "};
+			"\xE2\x96\xAA ", "\xE2\x96\xAB ", "\xE2\x80\xA3 ", "- "};
 		std::string marker;
 		size_t markerLength = 0;
 		for (const char* bullet : kBullets) {
@@ -562,8 +563,11 @@ formatMrkdwn(std::string_view text, const FormatContext& context)
 				before.remove_suffix(1);
 			builder.lines(before, quoteRest);
 		}
-		uint32_t style = kStyleCodeBlock | (quoteRest ? kStyleQuote : kStyleNone);
-		builder.ensureBreak(style);
+		// Breaks around the block separate it from the text; only the ones
+		// inside carry the code-block style.
+		uint32_t outside = quoteRest ? kStyleQuote : kStyleNone;
+		uint32_t style = kStyleCodeBlock | outside;
+		builder.ensureBreak(outside);
 		std::string_view code = text.substr(open + 3, close - open - 3);
 		if (startsWith(code, "\n"))
 			code.remove_prefix(1);
@@ -572,7 +576,7 @@ formatMrkdwn(std::string_view text, const FormatContext& context)
 		builder.literal(code, style, 0);
 		pos = close + 3;
 		if (pos < text.size()) {
-			builder.lineBreak(style);
+			builder.lineBreak(outside);
 			if (text[pos] == '\n' || text[pos] == ' ')
 				pos++;
 		}

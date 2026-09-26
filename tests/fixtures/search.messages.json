@@ -1,0 +1,54 @@
+{
+ "ok": true,
+ "query": "deploy",
+ "messages": {
+  "total": 2,
+  "pagination": {
+   "total_count": 2,
+   "page": 1,
+   "per_page": 20,
+   "page_count": 1,
+   "first": 1,
+   "last": 2
+  },
+  "paging": {
+   "count": 20,
+   "total": 2,
+   "page": 1,
+   "pages": 1
+  },
+  "matches": [
+   {
+    "iid": "a1",
+    "team": "T0NATTER",
+    "channel": {
+     "id": "C01GENERAL",
+     "is_channel": true,
+     "name": "general",
+     "is_private": false
+    },
+    "type": "message",
+    "user": "U01ALICE",
+    "username": "alice",
+    "ts": "1727000300.000500",
+    "text": "when do we deploy?",
+    "permalink": "https://natter-test.slack.com/archives/C01GENERAL/p1727000300000500"
+   },
+   {
+    "iid": "a2",
+    "team": "T0NATTER",
+    "channel": {
+     "id": "D04ALICE",
+     "is_im": true,
+     "name": "U01ALICE"
+    },
+    "type": "message",
+    "user": "U03SELF",
+    "username": "natter",
+    "ts": "1727000100.000200",
+    "text": "deploy after lunch",
+    "permalink": "https://natter-test.slack.com/archives/D04ALICE/p1727000100000200"
+   }
+  ]
+ }
+}

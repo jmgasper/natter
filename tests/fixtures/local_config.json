@@ -1,0 +1,26 @@
+{
+ "teams": {
+  "T0NATTER": {
+   "id": "T0NATTER",
+   "name": "Natter Test",
+   "url": "https://natter-test.slack.com/",
+   "domain": "natter-test",
+   "token": "xoxc-1111-2222-3333-aaaa",
+   "icon": {}
+  },
+  "T0OTHER": {
+   "id": "T0OTHER",
+   "name": "Other Place",
+   "domain": "other-place",
+   "token": "xoxc-4444-5555-6666-bbbb",
+   "enterprise_id": "E01"
+  },
+  "T0NOTOKEN": {
+   "id": "T0NOTOKEN",
+   "name": "Signed out",
+   "url": "https://gone.slack.com/"
+  }
+ },
+ "lastActiveTeamId": "T0OTHER",
+ "regions": {}
+}

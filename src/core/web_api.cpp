@@ -78,6 +78,18 @@ addCountsEntries(const json& array, UnreadCounts& counts, bool isDirect)
 	}
 }
 
+
+// Slack answers a file request with bad auth by redirecting to its sign-in
+// page, not with an error status.
+bool
+isLoginPage(const HttpResponse& response, const std::string& url)
+{
+	std::string type = toLower(response.header("Content-Type").value_or(""));
+	std::string path = toLower(url.substr(0, url.find('?')));
+	return startsWith(type, "text/html") && !endsWith(path, ".html")
+		&& !endsWith(path, ".htm");
+}
+
 }  // namespace
 
 
@@ -712,9 +724,7 @@ WebApi::download(const std::string& url) const
 	if (!response.success())
 		return Error(ErrorKind::Http, "http_" + std::to_string(response.status), {},
 			response.status);
-	// Slack serves its sign-in page, not an error, when the auth is wrong.
-	std::string type = toLower(response.header("Content-Type").value_or(""));
-	if (startsWith(type, "text/html") && !endsWith(toLower(url), ".html"))
+	if (isLoginPage(response, url))
 		return Error(ErrorKind::Auth, "download_login_page", {}, response.status);
 	return std::move(response.body);
 }
@@ -764,6 +774,8 @@ WebApi::downloadToFile(const std::string& url, const std::string& path,
 				? ErrorKind::Auth : ErrorKind::Http,
 			"http_" + std::to_string(response.status), {}, response.status));
 	}
+	if (isLoginPage(response, url))
+		return fail(Error(ErrorKind::Auth, "download_login_page", {}, response.status));
 	if (std::rename(temporary.c_str(), path.c_str()) != 0)
 		return fail(Error(ErrorKind::InvalidArgument, "cannot_write", path));
 	return {};

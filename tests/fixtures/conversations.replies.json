@@ -1,0 +1,39 @@
+{
+ "ok": true,
+ "messages": [
+  {
+   "type": "message",
+   "user": "U02BOB",
+   "text": "Thread root",
+   "ts": "1727000200.000400",
+   "thread_ts": "1727000200.000400",
+   "reply_count": 2,
+   "reply_users_count": 2,
+   "reply_users": [
+    "U01ALICE",
+    "U03SELF"
+   ],
+   "latest_reply": "1727000240.000460"
+  },
+  {
+   "type": "message",
+   "user": "U01ALICE",
+   "text": "first reply",
+   "ts": "1727000220.000410",
+   "thread_ts": "1727000200.000400",
+   "parent_user_id": "U02BOB"
+  },
+  {
+   "type": "message",
+   "user": "U03SELF",
+   "text": "second reply",
+   "ts": "1727000240.000460",
+   "thread_ts": "1727000200.000400",
+   "parent_user_id": "U02BOB"
+  }
+ ],
+ "has_more": false,
+ "response_metadata": {
+  "next_cursor": ""
+ }
+}

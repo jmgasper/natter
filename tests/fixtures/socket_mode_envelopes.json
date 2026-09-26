@@ -1,0 +1,92 @@
+[
+ {
+  "type": "hello",
+  "num_connections": 1,
+  "debug_info": {
+   "host": "applink-test",
+   "approximate_connection_time": 18060
+  },
+  "connection_info": {
+   "app_id": "A01NATTER"
+  }
+ },
+ {
+  "envelope_id": "env-1",
+  "type": "events_api",
+  "accepts_response_payload": false,
+  "retry_attempt": 0,
+  "retry_reason": "",
+  "payload": {
+   "token": "x",
+   "team_id": "T0NATTER",
+   "api_app_id": "A01NATTER",
+   "type": "event_callback",
+   "event_id": "Ev01",
+   "event_time": 1727000800,
+   "event": {
+    "type": "message",
+    "channel": "C01GENERAL",
+    "user": "U02BOB",
+    "text": "socket mode hello",
+    "ts": "1727000800.000900",
+    "channel_type": "channel",
+    "event_ts": "1727000800.000900"
+   }
+  }
+ },
+ {
+  "envelope_id": "env-2",
+  "type": "events_api",
+  "accepts_response_payload": false,
+  "retry_attempt": 0,
+  "retry_reason": "",
+  "payload": {
+   "team_id": "T0NATTER",
+   "type": "event_callback",
+   "event_id": "Ev02",
+   "event": {
+    "type": "reaction_added",
+    "user": "U01ALICE",
+    "reaction": "eyes",
+    "item": {
+     "type": "message",
+     "channel": "C01GENERAL",
+     "ts": "1727000800.000900"
+    },
+    "item_user": "U02BOB",
+    "event_ts": "1727000801.000901"
+   }
+  }
+ },
+ {
+  "envelope_id": "env-3",
+  "type": "events_api",
+  "accepts_response_payload": false,
+  "retry_attempt": 1,
+  "retry_reason": "timeout",
+  "payload": {
+   "team_id": "T0NATTER",
+   "type": "event_callback",
+   "event_id": "Ev01",
+   "event": {
+    "type": "message",
+    "channel": "C01GENERAL",
+    "user": "U02BOB",
+    "text": "socket mode hello",
+    "ts": "1727000800.000900",
+    "channel_type": "channel"
+   }
+  }
+ },
+ {
+  "envelope_id": "env-4",
+  "type": "slash_commands",
+  "accepts_response_payload": true,
+  "payload": {
+   "command": "/natter",
+   "text": "ping",
+   "user_id": "U01ALICE",
+   "channel_id": "C01GENERAL"
+  }
+ }
+]

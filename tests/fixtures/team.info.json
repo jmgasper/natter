@@ -1,0 +1,15 @@
+{
+ "ok": true,
+ "team": {
+  "id": "T0NATTER",
+  "name": "Natter Test",
+  "domain": "natter-test",
+  "email_domain": "",
+  "icon": {
+   "image_34": "https://icons.example/34.png",
+   "image_68": "https://icons.example/68.png",
+   "image_132": "https://icons.example/132.png",
+   "image_default": true
+  }
+ }
+}

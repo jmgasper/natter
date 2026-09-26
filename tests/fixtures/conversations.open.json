@@ -1,0 +1,17 @@
+{
+ "ok": true,
+ "no_op": true,
+ "already_open": true,
+ "channel": {
+  "id": "D04ALICE",
+  "created": 1700000000,
+  "is_archived": false,
+  "is_im": true,
+  "is_org_shared": false,
+  "context_team_id": "T0NATTER",
+  "updated": 1727000000,
+  "user": "U01ALICE",
+  "is_user_deleted": false,
+  "priority": 0.5
+ }
+}

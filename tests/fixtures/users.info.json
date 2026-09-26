@@ -1,0 +1,32 @@
+{
+ "ok": true,
+ "user": {
+  "id": "U01ALICE",
+  "team_id": "T0NATTER",
+  "name": "alice",
+  "deleted": false,
+  "color": "9f69e7",
+  "real_name": "Alice Anderson",
+  "tz": "Australia/Brisbane",
+  "tz_label": "AEST",
+  "tz_offset": 36000,
+  "profile": {
+   "real_name": "Alice Anderson",
+   "display_name": "ali",
+   "title": "",
+   "status_text": "",
+   "status_emoji": "",
+   "team": "T0NATTER",
+   "image_24": "https://avatars.example/U01ALICE_24.png",
+   "image_48": "https://avatars.example/U01ALICE_48.png",
+   "image_72": "https://avatars.example/U01ALICE_72.png",
+   "image_192": "https://avatars.example/U01ALICE_192.png"
+  },
+  "is_admin": false,
+  "is_owner": false,
+  "is_bot": false,
+  "is_app_user": false,
+  "updated": 1727000000,
+  "presence": "active"
+ }
+}

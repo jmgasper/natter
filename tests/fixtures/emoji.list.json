@@ -1,0 +1,10 @@
+{
+ "ok": true,
+ "emoji": {
+  "partyparrot": "https://emoji.example/partyparrot.gif",
+  "parrot": "alias:partyparrot",
+  "thumbs": "alias:thumbsup",
+  "shipit": "https://emoji.example/shipit.png"
+ },
+ "cache_ts": "1727000000.000000"
+}

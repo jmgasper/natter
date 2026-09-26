@@ -1,0 +1,51 @@
+{
+ "ok": true,
+ "threads": {
+  "has_unreads": false,
+  "mention_count": 0
+ },
+ "channels": [
+  {
+   "id": "C01GENERAL",
+   "last_read": "1727000100.000200",
+   "latest": "1727000300.000500",
+   "updated": "1727000300.000500",
+   "history_invalid": "1700000000.000000",
+   "mention_count": 1,
+   "has_unreads": true
+  },
+  {
+   "id": "C02RANDOM",
+   "last_read": "1727000000.000100",
+   "latest": "1727000000.000100",
+   "updated": "1727000000.000100",
+   "mention_count": 0,
+   "has_unreads": false
+  }
+ ],
+ "mpims": [
+  {
+   "id": "G05MPIM",
+   "last_read": "1726000000.000100",
+   "latest": "1727000000.000200",
+   "mention_count": 0,
+   "has_unreads": true
+  }
+ ],
+ "ims": [
+  {
+   "id": "D04ALICE",
+   "last_read": "1726000000.000100",
+   "latest": "1727000000.000300",
+   "mention_count": 2,
+   "has_unreads": true
+  }
+ ],
+ "channel_badges": {
+  "channels": 1,
+  "dms": 2,
+  "app_dms": 0,
+  "thread_mentions": 0,
+  "thread_unreads": 0
+ }
+}

@@ -1,0 +1,197 @@
+{
+ "ok": true,
+ "messages": [
+  {
+   "type": "message",
+   "user": "U01ALICE",
+   "text": "Welcome *everyone* to <#C02RANDOM|random> :tada:",
+   "ts": "1727000300.000500",
+   "team": "T0NATTER",
+   "reactions": [
+    {
+     "name": "tada",
+     "users": [
+      "U02BOB",
+      "U03SELF"
+     ],
+     "count": 2
+    },
+    {
+     "name": "+1::skin-tone-3",
+     "users": [
+      "U02BOB"
+     ],
+     "count": 1
+    }
+   ]
+  },
+  {
+   "type": "message",
+   "subtype": "bot_message",
+   "bot_id": "B01DEPLOY",
+   "username": "deploybot",
+   "text": "",
+   "ts": "1727000250.000300",
+   "attachments": [
+    {
+     "fallback": "Deployed v1.2",
+     "color": "good",
+     "title": "Deployed v1.2",
+     "text": "All green"
+    }
+   ],
+   "bot_profile": {
+    "id": "B01DEPLOY",
+    "name": "deploybot",
+    "icons": {
+     "image_48": "https://icons.example/bot.png"
+    }
+   }
+  },
+  {
+   "type": "message",
+   "user": "U02BOB",
+   "text": "Thread root",
+   "ts": "1727000200.000400",
+   "thread_ts": "1727000200.000400",
+   "reply_count": 2,
+   "reply_users_count": 2,
+   "reply_users": [
+    "U01ALICE",
+    "U03SELF"
+   ],
+   "latest_reply": "1727000240.000460"
+  },
+  {
+   "type": "message",
+   "user": "U03SELF",
+   "text": "hello <@U01ALICE> &amp; friends",
+   "ts": "1727000100.000200",
+   "edited": {
+    "user": "U03SELF",
+    "ts": "1727000110.000000"
+   },
+   "files": [
+    {
+     "id": "F01SHOT",
+     "name": "shot.png",
+     "title": "Screenshot",
+     "mimetype": "image/png",
+     "filetype": "png",
+     "pretty_type": "PNG",
+     "size": 12345,
+     "mode": "hosted",
+     "url_private": "https://files.slack.com/files-pri/T0NATTER-F01SHOT/shot.png",
+     "url_private_download": "https://files.slack.com/files-pri/T0NATTER-F01SHOT/download/shot.png",
+     "permalink": "https://natter-test.slack.com/files/U03SELF/F01SHOT/shot.png",
+     "thumb_64": "https://files.slack.com/thumb_64.png",
+     "thumb_360": "https://files.slack.com/thumb_360.png",
+     "original_w": 800,
+     "original_h": 600
+    }
+   ]
+  },
+  {
+   "type": "message",
+   "user": "U01ALICE",
+   "text": "Plan for *today* with <@U02BOB> :rocket:\n• ship it\n• <https://example.com/doc|read the doc>",
+   "ts": "1727000050.000100",
+   "blocks": [
+    {
+     "type": "rich_text",
+     "block_id": "b1",
+     "elements": [
+      {
+       "type": "rich_text_section",
+       "elements": [
+        {
+         "type": "text",
+         "text": "Plan for "
+        },
+        {
+         "type": "text",
+         "text": "today",
+         "style": {
+          "bold": true
+         }
+        },
+        {
+         "type": "text",
+         "text": " with "
+        },
+        {
+         "type": "user",
+         "user_id": "U02BOB"
+        },
+        {
+         "type": "text",
+         "text": " "
+        },
+        {
+         "type": "emoji",
+         "name": "rocket",
+         "unicode": "1f680"
+        },
+        {
+         "type": "text",
+         "text": "\n"
+        }
+       ]
+      },
+      {
+       "type": "rich_text_list",
+       "style": "bullet",
+       "indent": 0,
+       "elements": [
+        {
+         "type": "rich_text_section",
+         "elements": [
+          {
+           "type": "text",
+           "text": "ship it"
+          }
+         ]
+        },
+        {
+         "type": "rich_text_section",
+         "elements": [
+          {
+           "type": "link",
+           "url": "https://example.com/doc",
+           "text": "read the doc"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "rich_text_preformatted",
+       "elements": [
+        {
+         "type": "text",
+         "text": "make test"
+        }
+       ]
+      },
+      {
+       "type": "rich_text_quote",
+       "elements": [
+        {
+         "type": "text",
+         "text": "quoted words"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "has_more": true,
+ "pin_count": 0,
+ "channel_actions_ts": null,
+ "channel_actions_count": 0,
+ "response_metadata": {
+  "next_cursor": "YmVmb3JlOjE3MjcwMDAwNTA="
+ }
+}
