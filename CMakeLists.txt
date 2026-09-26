@@ -56,6 +56,30 @@ if(NATTER_BUILD_CLI)
 	endif()
 endif()
 
+# The Haiku app: Interface Kit UI on top of the core.
+if(HAIKU)
+	add_executable(Natter
+		src/ui/App.cpp
+		src/ui/Composer.cpp
+		src/ui/ImageCache.cpp
+		src/ui/MainWindow.cpp
+		src/ui/MessageView.cpp
+		src/ui/SignInWindow.cpp
+		src/ui/Sidebar.cpp
+		src/ui/TextLayout.cpp
+		src/ui/Theme.cpp
+		src/ui/main.cpp
+	)
+	target_link_libraries(Natter PRIVATE natter_core be tracker translation)
+	target_compile_options(Natter PRIVATE -Wall -Wextra -Wno-unused-parameter -Wno-multichar)
+	add_custom_command(TARGET Natter POST_BUILD
+		COMMAND rc -I ${CMAKE_CURRENT_SOURCE_DIR}/resources -o ${CMAKE_CURRENT_BINARY_DIR}/Natter.rsrc
+			${CMAKE_CURRENT_SOURCE_DIR}/resources/Natter.rdef
+		COMMAND xres -o $<TARGET_FILE:Natter> ${CMAKE_CURRENT_BINARY_DIR}/Natter.rsrc
+		COMMAND mimeset -f $<TARGET_FILE:Natter>
+		VERBATIM)
+endif()
+
 if(NATTER_BUILD_TESTS AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt)
 	enable_testing()
 	add_subdirectory(tests)
