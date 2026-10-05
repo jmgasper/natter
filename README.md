@@ -20,14 +20,14 @@ standard library.
 <!-- airos-ci:latest-builds:start -->
 ## Latest builds
 
-Built automatically by air/OS CI from commit `088ee71` on 2026-10-05 ([all files](https://github.com/jmgasper/natter/releases/tag/latest)).
+Built automatically by air/OS CI from commit `6190e97` on 2026-10-05 ([all files](https://github.com/jmgasper/natter/releases/tag/latest)).
 
 | Architecture | Package |
 |---|---|
 | arm64 | [natter-0.1.0-1-arm64.hpkg](https://github.com/jmgasper/natter/releases/download/latest/natter-0.1.0-1-arm64.hpkg) |
 | x86_64 | [natter-0.1.0-1-x86_64.hpkg](https://github.com/jmgasper/natter/releases/download/latest/natter-0.1.0-1-x86_64.hpkg) |
 
-Install with `pkgman install <file>`, or copy the file into `/boot/system/packages`. Haiku SDK: x86_64 hrev60206-669-g9dc439ceeb, arm64 hrev60206-669-g9dc439ceeb.
+Install with `pkgman install <file>`, or copy the file into `/boot/system/packages`. Haiku SDK: x86_64 hrev60206-675-g6c37f3ed68, arm64 hrev60206-675-g6c37f3ed68.
 <!-- airos-ci:latest-builds:end -->
 
 ## What is in the core
