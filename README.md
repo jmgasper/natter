@@ -17,6 +17,19 @@ The core builds and runs on Linux (for development and tests) and on Haiku
 (gcc 13). Its only system dependencies are libcurl, OpenSSL 3 and the C++
 standard library.
 
+<!-- airos-ci:latest-builds:start -->
+## Latest builds
+
+Built automatically by air/OS CI from commit `088ee71` on 2026-10-05 ([all files](https://github.com/jmgasper/natter/releases/tag/latest)).
+
+| Architecture | Package |
+|---|---|
+| arm64 | [natter-0.1.0-1-arm64.hpkg](https://github.com/jmgasper/natter/releases/download/latest/natter-0.1.0-1-arm64.hpkg) |
+| x86_64 | [natter-0.1.0-1-x86_64.hpkg](https://github.com/jmgasper/natter/releases/download/latest/natter-0.1.0-1-x86_64.hpkg) |
+
+Install with `pkgman install <file>`, or copy the file into `/boot/system/packages`. Haiku SDK: x86_64 hrev60206-669-g9dc439ceeb, arm64 hrev60206-669-g9dc439ceeb.
+<!-- airos-ci:latest-builds:end -->
+
 ## What is in the core
 
 - **HTTP**: a synchronous libcurl client behind the `HttpTransport`
